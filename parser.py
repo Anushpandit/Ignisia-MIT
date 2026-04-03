@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from email import policy
 from email.message import EmailMessage
 from email.parser import BytesParser
@@ -149,11 +150,13 @@ def parse_document(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
     timeout: float | None = 60.0,
     ocr_enabled: bool = True,
     ocr_language: str = "en",
     password: str | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     file_type = detect_file_type(file_data, filename=filename, content_type=content_type)
 
     if file_type == "pdf":
@@ -161,6 +164,7 @@ def parse_document(
             file_data,
             filename=filename,
             content_type=content_type,
+            uploaded_at=resolved_uploaded_at,
             timeout=timeout,
             ocr_enabled=ocr_enabled,
             ocr_language=ocr_language,
@@ -172,19 +176,31 @@ def parse_document(
             file_data,
             filename=filename,
             content_type=content_type,
+            uploaded_at=resolved_uploaded_at,
         )
 
     if file_type == "email":
-        return parse_email(file_data, filename=filename, content_type=content_type)
+        return parse_email(
+            file_data,
+            filename=filename,
+            content_type=content_type,
+            uploaded_at=resolved_uploaded_at,
+        )
 
     if file_type == "spreadsheet":
-        return parse_spreadsheet(file_data, filename=filename, content_type=content_type)
+        return parse_spreadsheet(
+            file_data,
+            filename=filename,
+            content_type=content_type,
+            uploaded_at=resolved_uploaded_at,
+        )
 
     if file_type == "image":
         return parse_image(
             file_data,
             filename=filename,
             content_type=content_type,
+            uploaded_at=resolved_uploaded_at,
             timeout=timeout,
             ocr_enabled=ocr_enabled,
             ocr_language=ocr_language,
@@ -200,12 +216,14 @@ def parse_pdf(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
     timeout: float | None = 60.0,
     ocr_enabled: bool = True,
     ocr_language: str = "en",
     password: str | None = None,
     parser: LiteParse | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     liteparse_parser = parser or _build_liteparse_parser()
     warnings: list[str] = []
 
@@ -245,6 +263,7 @@ def parse_pdf(
         "filename": filename or _resolve_filename(file_data),
         "content_type": content_type or "application/pdf",
         "file_size": file_size,
+        "uploaded_at": resolved_uploaded_at,
         "num_pages": result.num_pages,
         "ocr_enabled": ocr_enabled,
         "ocr_language": ocr_language,
@@ -270,7 +289,9 @@ def parse_text(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     raw_bytes = _read_bytes(file_data)
     text, encoding = _decode_text(raw_bytes)
     sections = _split_text_sections(text)
@@ -279,6 +300,7 @@ def parse_text(
         "filename": filename or _resolve_filename(file_data),
         "content_type": content_type or "text/plain",
         "file_size": len(raw_bytes),
+        "uploaded_at": resolved_uploaded_at,
         "encoding": encoding,
         "num_sections": len(sections),
     }
@@ -303,7 +325,9 @@ def parse_email(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     resolved_name = filename or _resolve_filename(file_data) or ""
     if Path(resolved_name).suffix.lower() == ".msg":
         raise NotImplementedError("Outlook .msg parsing is not implemented yet. Use .eml for now.")
@@ -338,6 +362,7 @@ def parse_email(
                     content_type=content_type_value,
                     disposition=disposition,
                     content_id=content_id,
+                    uploaded_at=resolved_uploaded_at,
                 )
             )
             continue
@@ -368,6 +393,7 @@ def parse_email(
         "filename": filename or _resolve_filename(file_data),
         "content_type": content_type or "message/rfc822",
         "file_size": len(raw_bytes),
+        "uploaded_at": resolved_uploaded_at,
         "subject": message.get("Subject", ""),
         "from": _format_email_addresses(message.get_all("From", [])),
         "to": _format_email_addresses(message.get_all("To", [])),
@@ -411,11 +437,13 @@ def parse_image(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
     timeout: float | None = 60.0,
     ocr_enabled: bool = True,
     ocr_language: str = "en",
     parser: LiteParse | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     raw_bytes = _read_bytes(file_data)
     detected_content_type, image_format = _detect_image_kind(
         raw_bytes,
@@ -432,6 +460,7 @@ def parse_image(
         "filename": filename or _resolve_filename(file_data),
         "content_type": detected_content_type,
         "file_size": len(raw_bytes),
+        "uploaded_at": resolved_uploaded_at,
         "image_format": image_format,
         "ocr_enabled": ocr_enabled,
         "ocr_language": ocr_language,
@@ -514,6 +543,7 @@ def parse_spreadsheet(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
     resolved_name = filename or _resolve_filename(file_data) or ""
     suffix = Path(resolved_name).suffix.lower()
@@ -524,6 +554,7 @@ def parse_spreadsheet(
             file_data,
             filename=filename,
             content_type=content_type,
+            uploaded_at=uploaded_at,
         )
 
     if suffix == ".xlsx" or normalized_content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
@@ -531,6 +562,7 @@ def parse_spreadsheet(
             file_data,
             filename=filename,
             content_type=content_type,
+            uploaded_at=uploaded_at,
         )
 
     if suffix == ".xls" or normalized_content_type == "application/vnd.ms-excel":
@@ -546,8 +578,14 @@ def parse_spreadsheets(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
-    return parse_spreadsheet(file_data, filename=filename, content_type=content_type)
+    return parse_spreadsheet(
+        file_data,
+        filename=filename,
+        content_type=content_type,
+        uploaded_at=uploaded_at,
+    )
 
 
 def liteparse_runtime_available() -> bool:
@@ -702,7 +740,9 @@ def _parse_csv_spreadsheet(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     raw_bytes = _read_bytes(file_data)
     text, encoding = _decode_text(raw_bytes)
     reader = csv.reader(StringIO(text))
@@ -717,6 +757,7 @@ def _parse_csv_spreadsheet(
         "filename": filename or _resolve_filename(file_data),
         "content_type": content_type or "text/csv",
         "file_size": len(raw_bytes),
+        "uploaded_at": resolved_uploaded_at,
         "encoding": encoding,
         "num_sheets": 1,
         "sheet_names": ["Sheet1"],
@@ -752,7 +793,9 @@ def _parse_xlsx_spreadsheet(
     *,
     filename: str | None = None,
     content_type: str | None = None,
+    uploaded_at: str | None = None,
 ) -> ParsedDocument:
+    resolved_uploaded_at = _resolve_uploaded_at(uploaded_at)
     try:
         from openpyxl import load_workbook
     except ModuleNotFoundError as exc:
@@ -805,6 +848,7 @@ def _parse_xlsx_spreadsheet(
         "filename": filename or _resolve_filename(file_data),
         "content_type": content_type or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "file_size": file_size,
+        "uploaded_at": resolved_uploaded_at,
         "num_sheets": len(workbook.sheetnames),
         "sheet_names": workbook.sheetnames,
     }
@@ -1057,6 +1101,7 @@ def _parse_email_attachment(
     content_type: str,
     disposition: str | None,
     content_id: str | None,
+    uploaded_at: str | None,
 ) -> DocumentAttachment:
     file_type = detect_file_type(payload_bytes, filename=filename, content_type=content_type)
     metadata: dict[str, Any] = {}
@@ -1069,6 +1114,7 @@ def _parse_email_attachment(
             payload_bytes,
             filename=filename,
             content_type=content_type,
+            uploaded_at=uploaded_at,
         )
     except NotImplementedError as exc:
         parsed_attachment = None
@@ -1099,6 +1145,13 @@ def _parse_email_attachment(
         structured_data=structured_data,
         warnings=warnings,
     )
+
+
+def _resolve_uploaded_at(uploaded_at: str | None) -> str:
+    normalized = str(uploaded_at or "").strip()
+    if normalized:
+        return normalized
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _detect_image_kind(

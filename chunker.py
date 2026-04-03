@@ -375,6 +375,7 @@ def _build_metadata(
         "source_file": _source_file(doc),
         "source_type": str(getattr(doc, "file_type", "")),
         "document_date": document_date,
+        "uploaded_at": str(getattr(doc, "metadata", {}).get("uploaded_at", "")),
         "block_type": block_type,
         "heading_context": heading_context or "",
     }
@@ -539,6 +540,10 @@ def _chunk_attachment_text_fallback(
         or getattr(parent_doc, "metadata", {}).get("date")
         or getattr(parent_doc, "metadata", {}).get("sent_date", "")
     )
+    attachment_uploaded_at = str(
+        attachment_metadata.get("uploaded_at")
+        or getattr(parent_doc, "metadata", {}).get("uploaded_at", "")
+    )
     block_type = _attachment_block_type(attachment_file_type)
     split_texts = _split_if_needed(attachment_text)
     chunks: list[Chunk] = []
@@ -549,6 +554,7 @@ def _chunk_attachment_text_fallback(
             "source_file": attachment_filename,
             "source_type": attachment_file_type,
             "document_date": attachment_date,
+            "uploaded_at": attachment_uploaded_at,
             "block_type": block_type,
             "heading_context": "",
             "parent_email_file": _source_file(parent_doc),

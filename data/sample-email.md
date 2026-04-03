@@ -5,6 +5,7 @@
 - **filename**: sample-email.eml
 - **content_type**: message/rfc822
 - **file_size**: 2694
+- **uploaded_at**: 2026-04-03T12:26:35.525210+00:00
 - **subject**: Q2 Operations Update
 - **from**: ['Alex Manager <alex.manager@example.com>']
 - **to**: ['ops-team@example.com']
@@ -53,6 +54,7 @@ Alex
 - **size**: 93
 - **disposition**: attachment
 - **is_inline**: False
+- **uploaded_at**: 2026-04-03T12:26:35.525210+00:00
 - **encoding**: utf-8-sig
 - **num_sections**: 3
 
@@ -73,6 +75,7 @@ Attached are the meeting notes for today.
 - **size**: 68
 - **disposition**: attachment
 - **is_inline**: False
+- **uploaded_at**: 2026-04-03T12:26:35.525210+00:00
 - **image_format**: png
 - **ocr_enabled**: True
 - **ocr_language**: en
@@ -93,6 +96,7 @@ Dimensions: 1x1
 - **size**: 589
 - **disposition**: attachment
 - **is_inline**: False
+- **uploaded_at**: 2026-04-03T12:26:35.525210+00:00
 - **num_pages**: 1
 - **ocr_enabled**: True
 - **ocr_language**: en

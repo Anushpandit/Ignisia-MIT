@@ -1,4 +1,5 @@
 .codex
+.env
 .tmp_image_sample/
 .venv/
 __pycache__/
@@ -7,6 +8,7 @@ __pycache__/
 .DS_Store
 
 .python-version
+chroma_db/
 data/*
 !data/sample-*.md
 !data/sample-*-chunks.json
