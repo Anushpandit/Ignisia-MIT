@@ -1,0 +1,9 @@
+.codex
+.tmp_image_sample/
+.venv/
+__pycache__/
+*.py[cod]
+
+.python-version
+data/
+eng.traineddata
