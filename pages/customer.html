@@ -499,6 +499,11 @@
         background: var(--amber-bg);
       }
 
+      .badge-closed {
+        color: #475569;
+        background: #e2e8f0;
+      }
+
       .setting-row {
         padding: 14px 16px;
         display: flex;
@@ -676,7 +681,7 @@
                     accept=".pdf,.txt,.md,.markdown,.eml,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp"
                   />
                   <input class="chat-input" id="emptyChatInput" type="text" placeholder="Ask anything" />
-                  <button class="ask-button" id="emptyChatAskButton">Ask</button>
+                  <button class="ask-button" id="emptyChatAskButton">Create ticket</button>
                 </div>
                 <div class="composer-files is-empty" id="emptyChatFiles"></div>
               </div>
@@ -723,43 +728,7 @@
           </header>
 
           <div class="content-scroll">
-            <div class="panel-stack" id="ticketList">
-              <article
-                class="ticket-card"
-                data-ticket-id="4821"
-                data-ticket-status="Open"
-                data-ticket-date="Mar 12 2025"
-                data-ticket-subject="Refund policy inquiry for the March 2025 order thread."
-              >
-                <div class="ticket-top">
-                  <div>
-                    <div class="ticket-id">#4821</div>
-                    <div class="ticket-customer" id="ticketCustomerName">Customer</div>
-                  </div>
-                  <span class="badge badge-open">Open</span>
-                </div>
-                <div class="ticket-subject">Refund policy inquiry for the March 2025 order thread.</div>
-                <div class="ticket-date">Mar 12 2025</div>
-              </article>
-
-              <article
-                class="ticket-card"
-                data-ticket-id="4828"
-                data-ticket-status="Pending"
-                data-ticket-date="Mar 14 2025"
-                data-ticket-subject="Follow-up on pricing differences and supporting documents."
-              >
-                <div class="ticket-top">
-                  <div>
-                    <div class="ticket-id">#4828</div>
-                    <div class="ticket-customer" id="ticketCustomerNameSecondary">Customer</div>
-                  </div>
-                  <span class="badge badge-pending">Pending</span>
-                </div>
-                <div class="ticket-subject">Follow-up on pricing differences and supporting documents.</div>
-                <div class="ticket-date">Mar 14 2025</div>
-              </article>
-            </div>
+            <div class="panel-stack" id="ticketList"></div>
           </div>
         </section>
 
@@ -831,6 +800,10 @@
           <div class="content-scroll">
             <div class="panel-stack">
               <div class="setting-row">
+                <div class="setting-label">Customer ID</div>
+                <div class="setting-value" id="profileCustomerIdValue">Not available</div>
+              </div>
+              <div class="setting-row">
                 <div class="setting-label">Profile name</div>
                 <div class="setting-value" id="profileNameValue">Customer</div>
               </div>
@@ -853,77 +826,17 @@
           <button class="header-action" aria-label="More actions">···</button>
         </div>
 
-        <div class="history-list" id="historyList">
-          <article class="history-card" data-history-ticket="4821">
-            <div class="history-top">
-              <div>
-                <div class="history-title"><span id="historyCustomerName">Customer</span> · Ticket #4821</div>
-                <div class="history-meta">Customer chat · Mar 12 2025</div>
-              </div>
-              <span class="badge badge-open">Open</span>
-            </div>
-            <div class="history-snippet">
-              Refund policy inquiry and conflict review for the March 2025 order thread.
-            </div>
-          </article>
-
-          <article class="history-card" data-history-ticket="4828">
-            <div class="history-top">
-              <div>
-                <div class="history-title"><span id="historyCustomerNameSecondary">Customer</span> · Ticket #4828</div>
-                <div class="history-meta">Customer chat · Mar 14 2025</div>
-              </div>
-              <span class="badge badge-pending">Pending</span>
-            </div>
-            <div class="history-snippet">
-              Quote follow-up about pricing differences and attached spreadsheet references.
-            </div>
-          </article>
-        </div>
+        <div class="history-list" id="historyList"></div>
       </aside>
     </div>
 
     <script>
       const SESSION_STORAGE_KEY = "knowledgeAgentSession";
       const API_BASE_URL = "http://localhost:5000";
-      let nextTicketId = 4900;
-      const CHAT_THREADS = {
-        "4821": {
-          status: "Open",
-          date: "Mar 12 2025",
-          subtitle: "Refund policy inquiry for the March 2025 order thread.",
-          messages: [
-            {
-              role: "user",
-              text: "Can you help confirm the refund policy for my March 2025 order?",
-            },
-            {
-              role: "assistant",
-              text: "Yes. Your ticket is open, and the current refund window for that order thread is 30 days from delivery.",
-            },
-          ],
-        },
-        "4828": {
-          status: "Pending",
-          date: "Mar 14 2025",
-          subtitle: "Follow-up on pricing differences and supporting documents.",
-          messages: [
-            {
-              role: "user",
-              text: "I need help understanding the pricing difference in the attached quote.",
-            },
-            {
-              role: "assistant",
-              text: "This ticket is pending review. The latest notes mention a spreadsheet mismatch and a follow-up quote comparison.",
-            },
-          ],
-        },
-      };
       const navItems = document.querySelectorAll(".nav-item");
       const views = document.querySelectorAll("[data-view-panel]");
       const chatStages = document.querySelectorAll("[data-chat-stage]");
       const mailStages = document.querySelectorAll("[data-mail-stage]");
-      const toggles = document.querySelectorAll(".toggle");
       const newChatButton = document.getElementById("newChatButton");
       const ticketList = document.getElementById("ticketList");
       const historyList = document.getElementById("historyList");
@@ -932,13 +845,10 @@
       const ticketOwnerPill = document.getElementById("ticketOwnerPill");
       const mailOwnerPill = document.getElementById("mailOwnerPill");
       const settingsOwnerPill = document.getElementById("settingsOwnerPill");
+      const profileCustomerIdValue = document.getElementById("profileCustomerIdValue");
       const profileNameValue = document.getElementById("profileNameValue");
       const profileEmailValue = document.getElementById("profileEmailValue");
       const customerGreeting = document.getElementById("customerGreeting");
-      const ticketCustomerName = document.getElementById("ticketCustomerName");
-      const ticketCustomerNameSecondary = document.getElementById("ticketCustomerNameSecondary");
-      const historyCustomerName = document.getElementById("historyCustomerName");
-      const historyCustomerNameSecondary = document.getElementById("historyCustomerNameSecondary");
       const emptyChatInput = document.getElementById("emptyChatInput");
       const emptyChatUpload = document.getElementById("emptyChatUpload");
       const emptyChatFiles = document.getElementById("emptyChatFiles");
@@ -958,8 +868,10 @@
       const mailBackButton = document.getElementById("mailBackButton");
       const sidebarLogoutButton = document.getElementById("sidebarLogoutButton");
       const logoutButton = document.getElementById("logoutButton");
-      let ticketCards = Array.from(document.querySelectorAll(".ticket-card"));
-      let historyCards = Array.from(document.querySelectorAll(".history-card"));
+      let customerName = "Customer";
+      let sessionInfo = null;
+      let currentTickets = [];
+      let activeTicketId = null;
 
       function setActiveView(viewName) {
         navItems.forEach((item) => {
@@ -983,43 +895,11 @@
         });
       }
 
-      function getCustomerName() {
-        try {
-          const rawSession = window.localStorage.getItem(SESSION_STORAGE_KEY);
-          if (!rawSession) {
-            return "Customer";
-          }
-
-          const session = JSON.parse(rawSession);
-          return typeof session.full_name === "string" && session.full_name.trim()
-            ? session.full_name.trim()
-            : "Customer";
-        } catch (_error) {
-          return "Customer";
-        }
-      }
-
-      function getCustomerEmail() {
-        try {
-          const rawSession = window.localStorage.getItem(SESSION_STORAGE_KEY);
-          if (!rawSession) {
-            return "Not available";
-          }
-
-          const session = JSON.parse(rawSession);
-          return typeof session.email === "string" && session.email.trim()
-            ? session.email.trim()
-            : "Not available";
-        } catch (_error) {
-          return "Not available";
-        }
-      }
-
       function getSessionInfo() {
         try {
           const rawSession = window.localStorage.getItem(SESSION_STORAGE_KEY);
           if (!rawSession) {
-            return { role: "customer", username: "", full_name: "Customer", email: "" };
+            return { role: "customer", username: "", full_name: "Customer", email: "", entity_id: "" };
           }
 
           const session = JSON.parse(rawSession);
@@ -1028,13 +908,15 @@
             username: typeof session.username === "string" ? session.username : "",
             full_name: typeof session.full_name === "string" ? session.full_name : "Customer",
             email: typeof session.email === "string" ? session.email : "",
+            entity_id: typeof session.entity_id === "string" ? session.entity_id : "",
           };
         } catch (_error) {
-          return { role: "customer", username: "", full_name: "Customer", email: "" };
+          return { role: "customer", username: "", full_name: "Customer", email: "", entity_id: "" };
         }
       }
 
       function applyCustomerProfile(profile) {
+        const resolvedCustomerId = profile.entity_id || "Not available";
         const resolvedName = profile.full_name || "Customer";
         const resolvedEmail = profile.email || "Not available";
         customerName = resolvedName;
@@ -1042,18 +924,16 @@
         ticketOwnerPill.textContent = resolvedName;
         mailOwnerPill.textContent = resolvedName;
         settingsOwnerPill.textContent = resolvedName;
+        profileCustomerIdValue.textContent = resolvedCustomerId;
         profileNameValue.textContent = resolvedName;
         profileEmailValue.textContent = resolvedEmail;
         customerGreeting.textContent = `Let's resolve your issue, ${resolvedName}`;
-        ticketCustomerName.textContent = resolvedName;
-        ticketCustomerNameSecondary.textContent = resolvedName;
-        historyCustomerName.textContent = resolvedName;
-        historyCustomerNameSecondary.textContent = resolvedName;
       }
 
       async function hydrateCustomerProfile() {
         const session = getSessionInfo();
         applyCustomerProfile({
+          entity_id: session.entity_id || "Not available",
           full_name: session.full_name || "Customer",
           email: session.email || "Not available",
         });
@@ -1077,6 +957,7 @@
             SESSION_STORAGE_KEY,
             JSON.stringify({
               ...session,
+              entity_id: data.entity_id,
               full_name: data.full_name,
               email: data.email,
               username: data.username,
@@ -1089,115 +970,142 @@
         }
       }
 
-      let customerName = getCustomerName();
+      sessionInfo = getSessionInfo();
+      customerName = sessionInfo.full_name || "Customer";
       hydrateCustomerProfile();
 
-      function getTodayLabel() {
+      function formatDateLabel(value) {
+        if (!value) {
+          return "";
+        }
+        const date = new Date(value.replace(" ", "T"));
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
         return new Intl.DateTimeFormat("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
-        }).format(new Date());
+        }).format(date);
       }
 
-      function refreshTicketCollections() {
-        ticketCards = Array.from(document.querySelectorAll(".ticket-card"));
-        historyCards = Array.from(document.querySelectorAll(".history-card"));
-
-        ticketCards.forEach((card) => {
-          card.onclick = () => {
-            openTicketChat(card.dataset.ticketId);
-          };
-        });
-
-        historyCards.forEach((card) => {
-          card.onclick = () => {
-            openTicketChat(card.dataset.historyTicket);
-          };
-        });
+      function badgeClass(status) {
+        if (status === "Pending") {
+          return "badge-pending";
+        }
+        if (status === "Closed") {
+          return "badge-closed";
+        }
+        return "badge-open";
       }
 
-      function createTicketCard(ticketId, thread) {
+      function setWorkspaceClosedState(status) {
+        const isClosed = status === "Closed";
+        workspaceInput.disabled = isClosed;
+        workspaceAskButton.disabled = isClosed;
+        workspaceUpload.disabled = isClosed;
+        workspaceInput.placeholder = isClosed ? "This ticket is closed" : "Ask anything";
+      }
+
+      function createTicketCard(ticket) {
         const article = document.createElement("article");
         article.className = "ticket-card";
-        article.dataset.ticketId = ticketId;
-        article.dataset.ticketStatus = thread.status;
-        article.dataset.ticketDate = thread.date;
-        article.dataset.ticketSubject = thread.subtitle;
+        article.dataset.ticketId = String(ticket.id);
+        article.addEventListener("click", () => {
+          openTicketChat(ticket.id);
+        });
         article.innerHTML = `
           <div class="ticket-top">
             <div>
-              <div class="ticket-id">#${ticketId}</div>
-              <div class="ticket-customer">${customerName}</div>
+              <div class="ticket-id">#${ticket.id}</div>
+              <div class="ticket-customer">${ticket.customer_name}</div>
             </div>
-            <span class="badge ${thread.status === "Pending" ? "badge-pending" : "badge-open"}">${thread.status}</span>
+            <span class="badge ${badgeClass(ticket.status)}">${ticket.status}</span>
           </div>
-          <div class="ticket-subject">${thread.subtitle}</div>
-          <div class="ticket-date">${thread.date}</div>
+          <div class="ticket-subject">${ticket.subject}</div>
+          <div class="ticket-date">${formatDateLabel(ticket.created_at)}</div>
         `;
+        article.classList.toggle("is-active", String(ticket.id) === String(activeTicketId));
         return article;
       }
 
-      function createHistoryCard(ticketId, thread) {
+      function createHistoryCard(ticket) {
         const article = document.createElement("article");
         article.className = "history-card";
-        article.dataset.historyTicket = ticketId;
+        article.dataset.historyTicket = String(ticket.id);
+        article.addEventListener("click", () => {
+          openTicketChat(ticket.id);
+        });
         article.innerHTML = `
           <div class="history-top">
             <div>
-              <div class="history-title">${customerName} · Ticket #${ticketId}</div>
-              <div class="history-meta">Customer chat · ${thread.date}</div>
+              <div class="history-title">${ticket.customer_name} · Ticket #${ticket.id}</div>
+              <div class="history-meta">Customer chat · ${formatDateLabel(ticket.created_at)}</div>
             </div>
-            <span class="badge ${thread.status === "Pending" ? "badge-pending" : "badge-open"}">${thread.status}</span>
+            <span class="badge ${badgeClass(ticket.status)}">${ticket.status}</span>
           </div>
-          <div class="history-snippet">${thread.subtitle}</div>
+          <div class="history-snippet">${ticket.last_message || ticket.subject}</div>
         `;
+        article.classList.toggle("is-active", String(ticket.id) === String(activeTicketId));
         return article;
       }
 
-      function createNewTicketFromMessage(messageText) {
-        const ticketId = String(nextTicketId++);
-        const trimmed = messageText.trim();
-        const attachedFiles = getSelectedFiles(emptyChatUpload);
-        const attachmentLine = attachedFiles.length
-          ? ` Files attached: ${attachedFiles.map((file) => file.name).join(", ")}.`
-          : "";
-        const thread = {
-          status: "Open",
-          date: getTodayLabel(),
-          subtitle: trimmed.length > 72 ? `${trimmed.slice(0, 69)}...` : trimmed,
-          messages: [
-            {
-              role: "user",
-              text: `${trimmed}${attachmentLine}`,
-            },
-            {
-              role: "assistant",
-              text: `I've created a new support ticket for this issue.${attachmentLine ? " I also noted the uploaded files for review." : ""} I'll use this chat to help track updates and next steps.`,
-            },
-          ],
-        };
+      function renderTickets(tickets) {
+        currentTickets = tickets;
+        ticketList.innerHTML = "";
+        historyList.innerHTML = "";
 
-        CHAT_THREADS[ticketId] = thread;
-        ticketList.prepend(createTicketCard(ticketId, thread));
-        historyList.prepend(createHistoryCard(ticketId, thread));
-        refreshTicketCollections();
-        clearSelectedFiles(emptyChatUpload, emptyChatFiles);
-        return ticketId;
-      }
+        if (tickets.length === 0) {
+          const emptyTicket = document.createElement("div");
+          emptyTicket.className = "setting-row";
+          emptyTicket.innerHTML = `<div class="setting-label">No tickets yet. Create one from the chat.</div>`;
+          ticketList.appendChild(emptyTicket);
 
-      function renderWorkspaceMessages(ticketId) {
-        const thread = CHAT_THREADS[ticketId];
-        if (!thread) {
+          const emptyHistory = document.createElement("div");
+          emptyHistory.className = "setting-row";
+          emptyHistory.innerHTML = `<div class="setting-label">No ticket history yet.</div>`;
+          historyList.appendChild(emptyHistory);
           return;
         }
 
+        tickets.forEach((ticket) => {
+          ticketList.appendChild(createTicketCard(ticket));
+          historyList.appendChild(createHistoryCard(ticket));
+        });
+      }
+
+      async function fetchTickets() {
+        if (!sessionInfo?.username) {
+          renderTickets([]);
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/tickets?role=customer&username=${encodeURIComponent(sessionInfo.username)}`,
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            renderTickets([]);
+            return;
+          }
+          renderTickets(data.tickets || []);
+        } catch (_error) {
+          renderTickets([]);
+        }
+      }
+
+      function renderWorkspaceMessages(messages) {
         workspaceMessages.innerHTML = "";
-        thread.messages.forEach((message) => {
+        messages.forEach((message) => {
           const wrapper = document.createElement("div");
           wrapper.className = `message ${message.role}`;
           wrapper.innerHTML = `<div class="bubble"></div>`;
-          wrapper.querySelector(".bubble").textContent = message.text;
+          let text = message.content || "";
+          if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+            text += `\n\nAttachments: ${message.attachments.join(", ")}`;
+          }
+          wrapper.querySelector(".bubble").textContent = text;
           workspaceMessages.appendChild(wrapper);
         });
       }
@@ -1228,63 +1136,92 @@
         renderSelectedFiles(input, container);
       }
 
-      function sendWorkspaceMessage() {
+      async function sendWorkspaceMessage() {
         const ticketId = workspaceInput.dataset.ticketId;
-        const thread = CHAT_THREADS[ticketId];
-        if (!thread) {
-          return;
-        }
-
         const text = workspaceInput.value.trim();
-        const attachedFiles = getSelectedFiles(workspaceUpload);
-        if (!text && attachedFiles.length === 0) {
+        if (!ticketId || !text) {
           workspaceInput.focus();
           return;
         }
 
-        const attachmentLine = attachedFiles.length
-          ? ` Files attached: ${attachedFiles.map((file) => file.name).join(", ")}.`
-          : "";
-
-        thread.messages.push({
-          role: "user",
-          text: `${text || "Uploaded files for review."}${attachmentLine}`,
-        });
-        thread.messages.push({
-          role: "assistant",
-          text: attachedFiles.length
-            ? "I’ve added your message and uploaded files to this ticket for review."
-            : "I’ve added your latest message to this support ticket.",
-        });
-
-        workspaceInput.value = "";
-        clearSelectedFiles(workspaceUpload, workspaceFiles);
-        renderWorkspaceMessages(ticketId);
-        scrollWorkspaceToBottom();
+        try {
+          const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/message`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: sessionInfo.username,
+              role: sessionInfo.role || "customer",
+              content: text,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+          workspaceInput.value = "";
+          clearSelectedFiles(workspaceUpload, workspaceFiles);
+          await fetchTickets();
+          await openTicketChat(ticketId);
+        } catch (_error) {
+          // Keep UI unchanged when message send fails.
+        }
       }
 
-      function openTicketChat(ticketId) {
-        const thread = CHAT_THREADS[ticketId];
-        if (!thread) {
+      async function openTicketChat(ticketId) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/messages`);
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+          activeTicketId = String(ticketId);
+          renderTickets(currentTickets);
+          workspaceTitle.textContent = `Ticket #${data.ticket.id}`;
+          workspaceSubtitle.textContent = `${data.ticket.customer_name} · ${data.ticket.subject}`;
+          workspaceTicketPill.textContent = data.ticket.status;
+          setWorkspaceClosedState(data.ticket.status);
+          renderWorkspaceMessages(data.messages || []);
+          setActiveView("chat");
+          showChatStage("workspace");
+          scrollWorkspaceToBottom();
+          workspaceInput.dataset.ticketId = String(ticketId);
+        } catch (_error) {
+          // Keep current UI state when loading a ticket fails.
+        }
+      }
+
+      async function createTicketFromComposer() {
+        const text = emptyChatInput.value.trim();
+        const files = getSelectedFiles(emptyChatUpload);
+        if (!text && files.length === 0) {
+          emptyChatInput.focus();
           return;
         }
 
-        ticketCards.forEach((card) => {
-          card.classList.toggle("is-active", card.dataset.ticketId === ticketId);
-        });
-        historyCards.forEach((card) => {
-          card.classList.toggle("is-active", card.dataset.historyTicket === ticketId);
+        const formData = new FormData();
+        formData.append("username", sessionInfo.username || "");
+        formData.append("role", "customer");
+        formData.append("message", text);
+        files.forEach((file) => {
+          formData.append("files", file);
         });
 
-        workspaceTitle.textContent = `Ticket #${ticketId}`;
-        workspaceSubtitle.textContent = `${customerName} · ${thread.subtitle}`;
-        workspaceTicketPill.textContent = thread.status;
-        customerNamePill.textContent = customerName;
-        renderWorkspaceMessages(ticketId);
-        setActiveView("chat");
-        showChatStage("workspace");
-        scrollWorkspaceToBottom();
-        workspaceInput.dataset.ticketId = ticketId;
+        try {
+          const response = await fetch(`${API_BASE_URL}/tickets/create`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+          emptyChatInput.value = "";
+          clearSelectedFiles(emptyChatUpload, emptyChatFiles);
+          await fetchTickets();
+          await openTicketChat(data.ticket.id);
+        } catch (_error) {
+          // Keep composer state unchanged when ticket creation fails.
+        }
       }
 
       navItems.forEach((item) => {
@@ -1299,7 +1236,7 @@
         });
       });
 
-      refreshTicketCollections();
+      fetchTickets();
 
       mailCards.forEach((card) => {
         card.addEventListener("click", () => {
@@ -1314,12 +1251,6 @@
         });
       });
 
-      toggles.forEach((toggle) => {
-        toggle.addEventListener("click", () => {
-          toggle.classList.toggle("is-on");
-        });
-      });
-
       emptyChatUpload.addEventListener("change", () => {
         renderSelectedFiles(emptyChatUpload, emptyChatFiles);
       });
@@ -1331,36 +1262,23 @@
       emptyChatInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          const text = emptyChatInput.value.trim();
-          if (!text && getSelectedFiles(emptyChatUpload).length === 0) {
-            return;
-          }
-          const newTicketId = createNewTicketFromMessage(text);
-          emptyChatInput.value = "";
-          openTicketChat(newTicketId);
+          void createTicketFromComposer();
         }
       });
 
       emptyChatAskButton.addEventListener("click", () => {
-        const text = emptyChatInput.value.trim();
-        if (!text && getSelectedFiles(emptyChatUpload).length === 0) {
-          emptyChatInput.focus();
-          return;
-        }
-        const newTicketId = createNewTicketFromMessage(text);
-        emptyChatInput.value = "";
-        openTicketChat(newTicketId);
+        void createTicketFromComposer();
       });
 
       workspaceInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          sendWorkspaceMessage();
+          void sendWorkspaceMessage();
         }
       });
 
       workspaceAskButton.addEventListener("click", () => {
-        sendWorkspaceMessage();
+        void sendWorkspaceMessage();
       });
 
       mailBackButton.addEventListener("click", () => {
@@ -1374,8 +1292,8 @@
         setActiveView("chat");
         showChatStage("empty");
         workspaceInput.dataset.ticketId = "";
-        ticketCards.forEach((card) => card.classList.remove("is-active"));
-        historyCards.forEach((card) => card.classList.remove("is-active"));
+        activeTicketId = null;
+        renderTickets(currentTickets);
         customerGreeting.textContent = `Let's resolve your issue, ${customerName}`;
         emptyChatInput.value = "";
         clearSelectedFiles(emptyChatUpload, emptyChatFiles);
