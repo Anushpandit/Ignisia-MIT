@@ -10,6 +10,7 @@ from database import (
     create_customer,
     create_employee,
     get_user_by_email,
+    get_latest_user,
     get_user_by_username,
     initialize_database,
 )
@@ -25,6 +26,9 @@ CORS(
             "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
         },
         r"/login": {
+            "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
+        },
+        r"/profile": {
             "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
         },
     },
@@ -116,13 +120,60 @@ def login():
 
         user = get_user_by_username(username, role)
         if user is None:
+            user = get_user_by_email(username, role)
+        if user is None:
             return jsonify({"success": False, "message": "User not found"}), 401
 
         stored_hash = cast(str, user["password_hash"])
         if not verify_password(password, stored_hash):
             return jsonify({"success": False, "message": "Incorrect password"}), 401
 
-        return jsonify({"success": True, "message": "Login successful", "role": role}), 200
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Login successful",
+                    "role": role,
+                    "full_name": cast(str, user["full_name"]),
+                    "username": cast(str, user["username"]),
+                    "email": cast(str, user["email"]),
+                }
+            ),
+            200,
+        )
+    except RuntimeError:
+        return jsonify({"success": False, "message": "Database operation failed"}), 400
+    except Exception:
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+
+@app.get("/profile")
+def profile():
+    try:
+        username = _normalize_text(request.args.get("username"))
+        role = _normalize_text(request.args.get("role")).lower()
+
+        if role not in VALID_ROLES:
+            return jsonify({"success": False, "message": "Invalid role"}), 400
+
+        user = get_user_by_username(username, role) if username else get_latest_user(role)
+        if user is None:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        entity_id_key = "emp_id" if role == "employee" else "cust_id"
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "role": role,
+                    "username": cast(str, user["username"]),
+                    "full_name": cast(str, user["full_name"]),
+                    "email": cast(str, user["email"]),
+                    "entity_id": cast(str, user[entity_id_key]),
+                }
+            ),
+            200,
+        )
     except RuntimeError:
         return jsonify({"success": False, "message": "Database operation failed"}), 400
     except Exception:

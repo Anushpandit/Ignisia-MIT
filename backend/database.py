@@ -117,4 +117,22 @@ def get_user_by_email(email: str, role: str) -> Optional[sqlite3.Row]:
         raise RuntimeError("Failed to fetch user by email") from error
 
 
+def get_latest_user(role: str) -> Optional[sqlite3.Row]:
+    table_name = "employees" if role == "employee" else "customers"
+    id_column = "emp_id" if role == "employee" else "cust_id"
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                f"""
+                SELECT *
+                FROM {table_name}
+                ORDER BY datetime(created_at) DESC, {id_column} DESC
+                LIMIT 1
+                """
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to fetch latest user") from error
+
+
 initialize_database()

@@ -1,4 +1,5 @@
 const API_BASE_URL = "http://localhost:5000";
+const SESSION_STORAGE_KEY = "knowledgeAgentSession";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getElement(id) {
@@ -209,6 +210,18 @@ async function submitLogin(event) {
     if (!response.ok || !data.success) {
       setBanner(errorBanner, data.message || "Login failed.", true);
       return;
+    }
+
+    if (data.role && data.full_name) {
+      window.localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          role: data.role,
+          full_name: data.full_name,
+          username: data.username ?? payload.username,
+          email: data.email ?? "",
+        })
+      );
     }
 
     if (data.role === "customer") {

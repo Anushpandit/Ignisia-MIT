@@ -4,32 +4,1541 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Employee Dashboard</title>
-    <link rel="stylesheet" href="../frontend/styles.css" />
+    <style>
+      :root {
+        --bg: #f5f5f5;
+        --panel: #ffffff;
+        --border: #e0e0e0;
+        --input-border: #d1d5db;
+        --text: #1a1a1a;
+        --muted: #6b7280;
+        --active: #f3f4f6;
+        --button: #1a1a1a;
+        --user-bubble: #e8f0fe;
+        --warning-bg: #fef3c7;
+        --warning-text: #92400e;
+        --warning-border: #fcd34d;
+        --pill: #f3f4f6;
+        --table-head: #f9fafb;
+        --green: #16a34a;
+        --green-bg: #dcfce7;
+        --amber: #d97706;
+        --amber-bg: #fef3c7;
+        --highlight: #fef9c3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .dashboard {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 220px 1fr 300px;
+      }
+
+      .left-sidebar,
+      .main-column,
+      .right-sidebar {
+        min-height: 0;
+      }
+
+      .left-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px 16px;
+        overflow-y: auto;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+      }
+
+      .brand {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .primary-sidebar-button {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        background: var(--button);
+        color: #ffffff;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .sidebar-spacer {
+        flex: 1;
+      }
+
+      .nav-item {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .nav-item.is-active {
+        background: var(--active);
+        color: var(--text);
+      }
+
+      .section-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .source-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .source-row {
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        text-align: left;
+        padding: 6px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .dot {
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .dot-pdf {
+        color: var(--green);
+      }
+
+      .dot-xlsx {
+        color: #2563eb;
+      }
+
+      .dot-eml {
+        color: #ea580c;
+      }
+
+      .dot-old {
+        color: #dc2626;
+      }
+
+      .upload-button {
+        margin-top: auto;
+        border: 0;
+        border-radius: 6px;
+        background: var(--button);
+        color: #ffffff;
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+
+      .main-column {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .view {
+        display: none;
+        min-height: 0;
+        height: 100%;
+      }
+
+      .view.is-active {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .main-header {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .main-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .main-title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .customer-pill {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--panel);
+        color: var(--text);
+        padding: 7px 12px;
+      }
+
+      .chat-layout {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chat-messages {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .message {
+        max-width: 74%;
+      }
+
+      .message.user {
+        align-self: flex-end;
+      }
+
+      .message.assistant {
+        align-self: flex-start;
+      }
+
+      .bubble {
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+
+      .user .bubble {
+        background: var(--user-bubble);
+      }
+
+      .assistant .bubble {
+        background: var(--panel);
+        border: 1px solid var(--border);
+      }
+
+      .highlight {
+        font-weight: 700;
+        background: var(--highlight);
+        border-radius: 3px;
+        padding: 0 2px;
+      }
+
+      .conflict-banner {
+        margin-top: 10px;
+        border: 1px solid var(--warning-border);
+        border-radius: 6px;
+        background: var(--warning-bg);
+        color: var(--warning-text);
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .pill-row {
+        margin-top: 10px;
+      }
+
+      .source-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        border-radius: 4px;
+        background: var(--pill);
+        color: var(--text);
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .chat-input-bar {
+        flex: 0 0 auto;
+        border-top: 1px solid var(--border);
+        background: var(--panel);
+        padding: 14px 20px;
+      }
+
+      .chat-input-shell {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-button,
+      .ask-button {
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .icon-button {
+        width: 36px;
+        height: 36px;
+        background: var(--active);
+        color: var(--text);
+      }
+
+      .ask-button {
+        background: var(--button);
+        color: #ffffff;
+        padding: 8px 14px;
+      }
+
+      .chat-input {
+        width: 100%;
+        border: 1px solid var(--input-border);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+      }
+
+      .content-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px;
+      }
+
+      .panel-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .ticket-card,
+      .setting-row,
+      .source-card,
+      .ticket-summary {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+
+      .ticket-card {
+        width: 100%;
+        text-align: left;
+        padding: 14px;
+        cursor: pointer;
+      }
+
+      .ticket-card.is-active {
+        background: var(--active);
+      }
+
+      .ticket-stage {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        flex-direction: column;
+      }
+
+      .ticket-stage.is-active {
+        display: flex;
+      }
+
+      .chat-stage {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        flex-direction: column;
+      }
+
+      .chat-stage.is-active {
+        display: flex;
+      }
+
+      .chat-empty {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        gap: 24px;
+      }
+
+      .chat-empty-text {
+        color: var(--text);
+        font-size: 40px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        text-align: center;
+      }
+
+      .chat-empty-shell {
+        width: 100%;
+        max-width: 760px;
+      }
+
+      .workspace-shell {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .workspace-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+
+      .workspace-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .workspace-toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .workspace-subtitle {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .secondary-button {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--text);
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .logout-button {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        background: var(--button);
+        color: #ffffff;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .workspace-messages {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .ticket-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .ticket-id {
+        font-weight: 700;
+      }
+
+      .ticket-customer {
+        margin-top: 2px;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .ticket-subject {
+        margin-top: 8px;
+      }
+
+      .ticket-date {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+
+      .badge-open {
+        color: var(--green);
+        background: var(--green-bg);
+      }
+
+      .badge-pending {
+        color: var(--amber);
+        background: var(--amber-bg);
+      }
+
+      .customer-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .customer-table thead th {
+        background: var(--table-head);
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        text-align: left;
+        padding: 12px 14px;
+      }
+
+      .customer-table tbody td {
+        padding: 13px 14px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .customer-table tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .setting-row {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .setting-label {
+        font-size: 14px;
+      }
+
+      .setting-value {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .right-sidebar {
+        background: var(--panel);
+        border-left: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 16px;
+      }
+
+      .sidebar-mode {
+        display: none;
+      }
+
+      .sidebar-mode.is-active {
+        display: block;
+      }
+
+      .sidebar-empty {
+        height: 100%;
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .history-card {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        text-align: left;
+        padding: 12px;
+        cursor: pointer;
+      }
+
+      .history-card.is-active {
+        background: var(--active);
+      }
+
+      .history-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .history-title {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .history-meta {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .history-snippet {
+        margin-top: 10px;
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .sidebar-title {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .header-action {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .back-button {
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .source-card {
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .source-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .source-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      blockquote {
+        margin: 10px 0 0;
+        padding-left: 10px;
+        border-left: 3px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+        font-style: italic;
+      }
+
+      .ticket-summary {
+        margin-top: 18px;
+        padding: 12px;
+      }
+
+      .summary-title {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .summary-field {
+        margin-bottom: 10px;
+      }
+
+      .summary-label {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .summary-value {
+        font-size: 13px;
+      }
+
+      .summary-link {
+        color: var(--text);
+        text-decoration: underline;
+      }
+
+      .preview-box {
+        min-height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--table-head);
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+
+      .meta-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .meta-item {
+        font-size: 13px;
+      }
+
+      .file-badge {
+        display: inline-flex;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--active);
+        font-size: 11px;
+      }
+
+      .detail-block {
+        margin-bottom: 14px;
+      }
+
+      .detail-label {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .detail-value {
+        font-size: 13px;
+      }
+
+      .detail-file {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        color: var(--text);
+        padding: 7px 0;
+        cursor: pointer;
+      }
+
+      @media (max-width: 1100px) {
+        .dashboard {
+          grid-template-columns: 220px 1fr;
+        }
+
+        .right-sidebar {
+          display: none;
+        }
+      }
+    </style>
   </head>
-  <body class="dashboard-body">
-    <div class="app-layout">
-      <header class="app-header">
-        <div class="brand">KnowledgeAgent</div>
-        <div class="header-meta">Employee Workspace</div>
-      </header>
+  <body>
+    <div class="dashboard">
+      <aside class="left-sidebar">
+        <div>
+          <div class="brand">KnowledgeAgent</div>
+        </div>
 
-      <div class="workspace">
-        <aside class="sidebar">
-          <h2 class="sidebar-title">Navigation</h2>
-          <nav class="nav-list" aria-label="Sidebar">
-            <a class="nav-item is-active" href="#">Chat</a>
-            <a class="nav-item" href="#">Documents</a>
-            <a class="nav-item" href="#">Customers</a>
-            <a class="nav-item" href="#">Tickets</a>
-            <a class="nav-item" href="#">Settings</a>
-          </nav>
-        </aside>
+        <button class="primary-sidebar-button" id="newChatButton" type="button">+ New chat</button>
 
-        <main class="content-panel">
-          <h1>Welcome, Employee</h1>
-          <p>Your knowledge portal is ready.</p>
-        </main>
-      </div>
+        <nav class="nav" aria-label="Employee navigation">
+          <button class="nav-item is-active" data-view="chat">Chat</button>
+          <button class="nav-item" data-view="tickets">Tickets</button>
+          <button class="nav-item" data-view="settings">Settings</button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+
+        <button class="logout-button" id="logoutButton" type="button">Logout</button>
+      </aside>
+
+      <main class="main-column">
+        <section class="view is-active" data-view-panel="chat">
+          <header class="main-header">
+            <div class="main-header-left">
+              <div class="main-title">Knowledge chat</div>
+            </div>
+            <button class="customer-pill" id="chatHeaderPill">No ticket selected</button>
+          </header>
+
+          <div class="chat-stage is-active" data-chat-stage="empty">
+            <div class="chat-empty">
+              <div class="chat-empty-text">Let's Close Some Tickets</div>
+              <div class="chat-empty-shell">
+                <div class="chat-input-shell">
+                  <button class="icon-button" id="emptyChatScrollButton" aria-label="Scroll empty chat">↓</button>
+                  <input class="chat-input" id="emptyChatInput" type="text" placeholder="Ask about this ticket" />
+                  <button class="ask-button" id="emptyChatAskButton">Ask</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-stage" data-chat-stage="workspace">
+            <div class="workspace-shell">
+              <div class="workspace-toolbar">
+                <div class="workspace-toolbar-left">
+                  <div>
+                    <div class="main-title" id="workspaceTitle">Ticket #4821</div>
+                    <div class="workspace-subtitle" id="workspaceSubtitle">Acme Corp · Refund policy inquiry — bulk order Mar 2025</div>
+                  </div>
+                </div>
+                <div class="workspace-toolbar-actions">
+                  <button class="secondary-button" id="closeTicketButton">Close ticket</button>
+                </div>
+              </div>
+
+              <div class="workspace-messages" id="workspaceMessages">
+                <div class="message user">
+                  <div class="bubble">
+                    Can you confirm the refund policy for the Acme bulk order from March 2025 and tell me which policy document applies?
+                  </div>
+                </div>
+
+                <div class="message assistant">
+                  <div class="bubble">
+                    <div>
+                      For this ticket, the current refund window is
+                      <span class="highlight">30 days</span>
+                      from delivery. The newer 2024 refund policy should be used instead of the older 2022 policy document.
+                    </div>
+                    <div class="conflict-banner">
+                      Conflict detected — old_policy_2022.pdf states a 14-day window. Trusting refund_policy_2024.pdf (newer, dated Jan 2024).
+                    </div>
+                    <div class="pill-row">
+                      <button
+                        class="source-pill"
+                        data-preview-name="refund_policy_2024.pdf"
+                        data-preview-type="PDF"
+                        data-preview-pages="12 pages"
+                        data-preview-date="Jan 2024"
+                      >
+                        refund_policy_2024.pdf · p.3
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-input-bar">
+                <div class="chat-input-shell">
+                  <button class="icon-button" id="workspaceScrollButton" aria-label="Scroll ticket chat">↓</button>
+                  <input class="chat-input" id="workspaceInput" type="text" placeholder="Ask about this ticket" />
+                  <button class="ask-button" id="workspaceAskButton">Ask</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="tickets">
+          <div class="ticket-stage is-active" data-ticket-stage="list">
+            <header class="main-header">
+              <div class="main-header-left">
+                <div class="main-title">Customer Tickets</div>
+              </div>
+            </header>
+            <div class="content-scroll">
+              <div class="panel-stack">
+                <button
+                  class="ticket-card"
+                  data-ticket-id="4821"
+                  data-ticket-customer="Acme Corp"
+                  data-ticket-subject="Refund policy inquiry — bulk order Mar 2025"
+                  data-ticket-status="Open"
+                  data-ticket-date="Mar 12 2025"
+                >
+                  <div class="ticket-top">
+                    <div>
+                      <div class="ticket-id">#4821</div>
+                      <div class="ticket-customer">Acme Corp</div>
+                    </div>
+                    <span class="badge badge-open">Open</span>
+                  </div>
+                  <div class="ticket-subject">Refund policy inquiry — bulk order Mar 2025</div>
+                  <div class="ticket-date">Mar 12 2025</div>
+                </button>
+
+                <button
+                  class="ticket-card"
+                  data-ticket-id="4828"
+                  data-ticket-customer="Northwind Supply"
+                  data-ticket-subject="Pricing discrepancy for April renewal quote"
+                  data-ticket-status="Pending"
+                  data-ticket-date="Mar 14 2025"
+                >
+                  <div class="ticket-top">
+                    <div>
+                      <div class="ticket-id">#4828</div>
+                      <div class="ticket-customer">Northwind Supply</div>
+                    </div>
+                    <span class="badge badge-pending">Pending</span>
+                  </div>
+                  <div class="ticket-subject">Pricing discrepancy for April renewal quote</div>
+                  <div class="ticket-date">Mar 14 2025</div>
+                </button>
+
+                <button
+                  class="ticket-card"
+                  data-ticket-id="4836"
+                  data-ticket-customer="Harbor Foods"
+                  data-ticket-subject="Document mismatch on return approval terms"
+                  data-ticket-status="Open"
+                  data-ticket-date="Mar 18 2025"
+                >
+                  <div class="ticket-top">
+                    <div>
+                      <div class="ticket-id">#4836</div>
+                      <div class="ticket-customer">Harbor Foods</div>
+                    </div>
+                    <span class="badge badge-open">Open</span>
+                  </div>
+                  <div class="ticket-subject">Document mismatch on return approval terms</div>
+                  <div class="ticket-date">Mar 18 2025</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <section class="view" data-view-panel="settings">
+          <header class="main-header">
+            <div class="main-header-left">
+              <div class="main-title">Settings</div>
+            </div>
+          </header>
+          <div class="content-scroll">
+            <div class="panel-stack">
+              <div class="setting-row">
+                <div class="setting-label">Profile name</div>
+                <div class="setting-value" id="profileNameValue">Employee</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">Email ID</div>
+                <div class="setting-value" id="profileEmailValue">Not available</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-label">Logout</div>
+                <button class="secondary-button" id="settingsLogoutButton" type="button">Logout</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="right-sidebar">
+        <section class="sidebar-mode is-active" data-sidebar-mode="history">
+          <div class="sidebar-header">
+            <div class="sidebar-title">Chat history</div>
+            <button class="header-action" aria-label="More actions">···</button>
+          </div>
+
+          <div class="history-list">
+            <button
+              class="history-card"
+              data-history-ticket="4821"
+              data-history-customer="Acme Corp"
+              data-history-subject="Refund policy inquiry — bulk order Mar 2025"
+              data-history-status="Open"
+              data-history-date="Mar 12 2025"
+            >
+              <div class="history-top">
+                <div>
+                  <div class="history-title">Acme Corp · Ticket #4821</div>
+                  <div class="history-meta">Customer chat · Mar 12 2025</div>
+                </div>
+                <span class="badge badge-open">Open</span>
+              </div>
+              <div class="history-snippet">
+                Refund policy inquiry and conflict review for the March 2025 bulk order thread.
+              </div>
+            </button>
+
+            <button
+              class="history-card"
+              data-history-ticket="4828"
+              data-history-customer="Northwind Supply"
+              data-history-subject="Pricing discrepancy for April renewal quote"
+              data-history-status="Pending"
+              data-history-date="Mar 14 2025"
+            >
+              <div class="history-top">
+                <div>
+                  <div class="history-title">Northwind Supply · Ticket #4828</div>
+                  <div class="history-meta">Customer chat · Mar 14 2025</div>
+                </div>
+                <span class="badge badge-pending">Pending</span>
+              </div>
+              <div class="history-snippet">
+                Quote follow-up about renewal pricing differences and spreadsheet references.
+              </div>
+            </button>
+
+            <button
+              class="history-card"
+              data-history-ticket="4836"
+              data-history-customer="Harbor Foods"
+              data-history-subject="Document mismatch on return approval terms"
+              data-history-status="Open"
+              data-history-date="Mar 18 2025"
+            >
+              <div class="history-top">
+                <div>
+                  <div class="history-title">Harbor Foods · Ticket #4836</div>
+                  <div class="history-meta">Customer chat · Mar 18 2025</div>
+                </div>
+                <span class="badge badge-open">Open</span>
+              </div>
+              <div class="history-snippet">
+                Return approval mismatch between older policy wording and the latest customer thread.
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="sidebar-mode" data-sidebar-mode="sources">
+          <div class="sidebar-header">
+            <div class="sidebar-title">Sources used</div>
+            <button class="header-action" aria-label="More actions">···</button>
+          </div>
+
+          <div class="source-card">
+            <div class="source-name">refund_policy_2024.pdf</div>
+            <div class="source-meta">Page 3 · Section 4.2 · Jan 2024</div>
+            <blockquote>
+              ...bulk orders are eligible for full refund within 30 days of confirmed delivery...
+            </blockquote>
+          </div>
+
+          <div class="source-card">
+            <div class="source-name">old_policy_2022.pdf</div>
+            <div class="source-meta">Page 2 · Section 2.1 · Oct 2022</div>
+            <blockquote>
+              ...legacy policy described a 14-day return window for special bulk shipments...
+            </blockquote>
+          </div>
+
+          <div class="ticket-summary">
+            <div class="summary-title">Auto-filled ticket</div>
+            <div class="summary-field">
+              <span class="summary-label">Customer</span>
+              <div class="summary-value">Acme Corp</div>
+            </div>
+            <div class="summary-field">
+              <span class="summary-label">Query</span>
+              <div class="summary-value">Refund policy — bulk orders Mar 2025</div>
+            </div>
+            <div class="summary-field">
+              <span class="summary-label">Answer summary</span>
+              <div class="summary-value">30-day full refund window. Conflict resolved — 2024 policy applied.</div>
+            </div>
+            <div class="summary-field">
+              <span class="summary-label">Sources</span>
+              <div class="summary-value"><span class="summary-link">View references</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebar-mode" data-sidebar-mode="preview">
+          <div class="sidebar-header">
+            <button class="back-button" id="previewBackButton">←</button>
+            <div class="sidebar-title" id="previewTitle">refund_policy_2024.pdf</div>
+            <div></div>
+          </div>
+
+          <div class="preview-box" id="previewBox">Preview: refund_policy_2024.pdf</div>
+
+          <div class="meta-list">
+            <div class="meta-item">
+              <span class="detail-label">File type</span>
+              <span class="file-badge" id="previewType">PDF</span>
+            </div>
+            <div class="meta-item">
+              <span class="detail-label">Page count</span>
+              <div id="previewPages">12 pages</div>
+            </div>
+            <div class="meta-item">
+              <span class="detail-label">Date indexed</span>
+              <div id="previewDate">Jan 2024</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebar-mode" data-sidebar-mode="ticket">
+          <div class="sidebar-header">
+            <button class="back-button" id="ticketBackButton">←</button>
+            <div class="sidebar-title" id="ticketTitle">Ticket #4821</div>
+            <div></div>
+          </div>
+
+          <div class="detail-block">
+            <span class="detail-label">Customer name</span>
+            <div class="detail-value" id="ticketCustomer">Acme Corp</div>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Status</span>
+            <div class="detail-value" id="ticketStatusWrap"><span class="badge badge-open">Open</span></div>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Subject</span>
+            <div class="detail-value" id="ticketSubject">Refund policy inquiry — bulk order Mar 2025</div>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Date created</span>
+            <div class="detail-value" id="ticketDate">Mar 12 2025</div>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Indexed files for this customer</span>
+            <button
+              class="detail-file"
+              data-preview-name="refund_policy_2024.pdf"
+              data-preview-type="PDF"
+              data-preview-pages="12 pages"
+              data-preview-date="Jan 2024"
+            >
+              refund_policy_2024.pdf
+            </button>
+            <button
+              class="detail-file"
+              data-preview-name="acme_thread_mar25.eml"
+              data-preview-type="EML"
+              data-preview-pages="1 thread"
+              data-preview-date="Mar 2025"
+            >
+              acme_thread_mar25.eml
+            </button>
+            <button
+              class="detail-file"
+              data-preview-name="pricing_q1_2025.xlsx"
+              data-preview-type="XLSX"
+              data-preview-pages="8 sheets"
+              data-preview-date="Mar 2025"
+            >
+              pricing_q1_2025.xlsx
+            </button>
+          </div>
+        </section>
+      </aside>
     </div>
+
+    <script>
+      const SESSION_STORAGE_KEY = "knowledgeAgentSession";
+      const API_BASE_URL = "http://localhost:5000";
+      const navItems = document.querySelectorAll(".nav-item");
+      const views = document.querySelectorAll("[data-view-panel]");
+      const chatStages = document.querySelectorAll("[data-chat-stage]");
+      const newChatButton = document.getElementById("newChatButton");
+      const logoutButton = document.getElementById("logoutButton");
+      const settingsLogoutButton = document.getElementById("settingsLogoutButton");
+      const chatHeaderPill = document.getElementById("chatHeaderPill");
+      const emptyChatInput = document.getElementById("emptyChatInput");
+      const emptyChatAskButton = document.getElementById("emptyChatAskButton");
+      const emptyChatScrollButton = document.getElementById("emptyChatScrollButton");
+      const profileNameValue = document.getElementById("profileNameValue");
+      const profileEmailValue = document.getElementById("profileEmailValue");
+      const ticketCards = document.querySelectorAll(".ticket-card");
+      const historyCards = document.querySelectorAll(".history-card");
+      const ticketStages = document.querySelectorAll("[data-ticket-stage]");
+      const previewTriggers = document.querySelectorAll("[data-preview-name]");
+      const sidebarModes = document.querySelectorAll("[data-sidebar-mode]");
+      const previewBackButton = document.getElementById("previewBackButton");
+      const ticketBackButton = document.getElementById("ticketBackButton");
+      const workspaceTitle = document.getElementById("workspaceTitle");
+      const workspaceSubtitle = document.getElementById("workspaceSubtitle");
+      const workspaceMessages = document.getElementById("workspaceMessages");
+      const workspaceInput = document.getElementById("workspaceInput");
+      const workspaceAskButton = document.getElementById("workspaceAskButton");
+      const workspaceScrollButton = document.getElementById("workspaceScrollButton");
+      const closeTicketButton = document.getElementById("closeTicketButton");
+
+      const previewTitle = document.getElementById("previewTitle");
+      const previewBox = document.getElementById("previewBox");
+      const previewType = document.getElementById("previewType");
+      const previewPages = document.getElementById("previewPages");
+      const previewDate = document.getElementById("previewDate");
+
+      const ticketTitle = document.getElementById("ticketTitle");
+      const ticketCustomer = document.getElementById("ticketCustomer");
+      const ticketStatusWrap = document.getElementById("ticketStatusWrap");
+      const ticketSubject = document.getElementById("ticketSubject");
+      const ticketDate = document.getElementById("ticketDate");
+
+      let previousSidebarMode = "sources";
+      let activeTicket = null;
+
+      function getSessionProfile() {
+        try {
+          const rawSession = window.localStorage.getItem(SESSION_STORAGE_KEY);
+          if (!rawSession) {
+            return {
+              fullName: "Employee",
+              email: "Not available",
+              username: "",
+              role: "employee",
+            };
+          }
+
+          const session = JSON.parse(rawSession);
+          return {
+            fullName:
+              typeof session.full_name === "string" && session.full_name.trim()
+                ? session.full_name.trim()
+                : "Employee",
+            email:
+              typeof session.email === "string" && session.email.trim()
+                ? session.email.trim()
+                : "Not available",
+            username: typeof session.username === "string" ? session.username : "",
+            role: typeof session.role === "string" ? session.role : "employee",
+          };
+        } catch (_error) {
+          return {
+            fullName: "Employee",
+            email: "Not available",
+            username: "",
+            role: "employee",
+          };
+        }
+      }
+
+      function applyEmployeeProfile(profile) {
+        profileNameValue.textContent = profile.full_name || "Employee";
+        profileEmailValue.textContent = profile.email || "Not available";
+      }
+
+      async function hydrateEmployeeProfile() {
+        const session = getSessionProfile();
+        applyEmployeeProfile({
+          full_name: session.fullName,
+          email: session.email,
+        });
+
+        if (!session.username || !session.role) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/profile?role=${encodeURIComponent(session.role)}${
+              session.username ? `&username=${encodeURIComponent(session.username)}` : ""
+            }`,
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+
+          window.localStorage.setItem(
+            SESSION_STORAGE_KEY,
+            JSON.stringify({
+              role: data.role,
+              username: data.username,
+              full_name: data.full_name,
+              email: data.email,
+            }),
+          );
+          applyEmployeeProfile(data);
+        } catch (_error) {
+          // Fall back to session values when the profile request fails.
+        }
+      }
+
+      hydrateEmployeeProfile();
+
+      function setActiveView(viewName) {
+        navItems.forEach((item) => {
+          item.classList.toggle("is-active", item.dataset.view === viewName);
+        });
+
+        views.forEach((view) => {
+          view.classList.toggle("is-active", view.dataset.viewPanel === viewName);
+        });
+
+        if (viewName === "chat") {
+          showSidebarMode("history");
+          if (!activeTicket) {
+            showChatStage("empty");
+          }
+        }
+
+        if (viewName === "tickets") {
+          showTicketStage("list");
+          showSidebarMode("history");
+        }
+      }
+
+      function showSidebarMode(modeName) {
+        sidebarModes.forEach((mode) => {
+          mode.classList.toggle("is-active", mode.dataset.sidebarMode === modeName);
+        });
+      }
+
+      function showChatStage(stageName) {
+        chatStages.forEach((stage) => {
+          stage.classList.toggle("is-active", stage.dataset.chatStage === stageName);
+        });
+      }
+
+      function showTicketStage(stageName) {
+        ticketStages.forEach((stage) => {
+          stage.classList.toggle("is-active", stage.dataset.ticketStage === stageName);
+        });
+      }
+
+      function openPreview(name, type, pages, date) {
+        previousSidebarMode = document.querySelector("[data-sidebar-mode].is-active")?.dataset.sidebarMode || "sources";
+        previewTitle.textContent = name;
+        previewBox.textContent = `Preview: ${name}`;
+        previewType.textContent = type;
+        previewPages.textContent = pages;
+        previewDate.textContent = date;
+        showSidebarMode("preview");
+      }
+
+      function openTicketDetail(card) {
+        ticketCards.forEach((ticketCard) => {
+          ticketCard.classList.toggle("is-active", ticketCard === card);
+        });
+        historyCards.forEach((historyCard) => {
+          historyCard.classList.toggle("is-active", historyCard.dataset.historyTicket === card.dataset.ticketId);
+        });
+
+        activeTicket = card;
+        previousSidebarMode = document.querySelector("[data-sidebar-mode].is-active")?.dataset.sidebarMode || "sources";
+        const status = card.dataset.ticketStatus;
+        const badgeClass = status === "Pending" ? "badge-pending" : "badge-open";
+
+        ticketTitle.textContent = `Ticket #${card.dataset.ticketId}`;
+        ticketCustomer.textContent = card.dataset.ticketCustomer;
+        ticketStatusWrap.innerHTML = `<span class="badge ${badgeClass}">${status}</span>`;
+        ticketSubject.textContent = card.dataset.ticketSubject;
+        ticketDate.textContent = card.dataset.ticketDate;
+        workspaceTitle.textContent = `Ticket #${card.dataset.ticketId}`;
+        workspaceSubtitle.textContent = `${card.dataset.ticketCustomer} · ${card.dataset.ticketSubject}`;
+        chatHeaderPill.textContent = card.dataset.ticketCustomer;
+        showChatStage("workspace");
+        setActiveView("chat");
+      }
+
+      function openHistoryDetail(historyCard) {
+        const matchingTicket = Array.from(ticketCards).find(
+          (ticketCard) => ticketCard.dataset.ticketId === historyCard.dataset.historyTicket
+        );
+        if (matchingTicket) {
+          openTicketDetail(matchingTicket);
+          return;
+        }
+
+        historyCards.forEach((card) => {
+          card.classList.toggle("is-active", card === historyCard);
+        });
+      }
+
+      function scrollWorkspaceToBottom() {
+        workspaceMessages.scrollTop = workspaceMessages.scrollHeight;
+      }
+
+      function appendWorkspaceUserMessage(text) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message user";
+        wrapper.innerHTML = `<div class="bubble"></div>`;
+        wrapper.querySelector(".bubble").textContent = text;
+        workspaceMessages.appendChild(wrapper);
+      }
+
+      function appendWorkspaceAssistantMessage() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message assistant";
+        wrapper.innerHTML = `
+          <div class="bubble">
+            <div>This is a placeholder ticket response. Live ticket-specific RAG answers will appear here.</div>
+            <div class="pill-row">
+              <button
+                class="source-pill"
+                data-preview-name="refund_policy_2024.pdf"
+                data-preview-type="PDF"
+                data-preview-pages="12 pages"
+                data-preview-date="Jan 2024"
+              >
+                refund_policy_2024.pdf · p.3
+              </button>
+            </div>
+          </div>
+        `;
+        const pill = wrapper.querySelector(".source-pill");
+        pill.addEventListener("click", () => {
+          openPreview("refund_policy_2024.pdf", "PDF", "12 pages", "Jan 2024");
+        });
+        workspaceMessages.appendChild(wrapper);
+      }
+
+      function sendWorkspaceMessage() {
+        const text = workspaceInput.value.trim();
+        if (!text) {
+          return;
+        }
+
+        appendWorkspaceUserMessage(text);
+        workspaceInput.value = "";
+        scrollWorkspaceToBottom();
+
+        window.setTimeout(() => {
+          appendWorkspaceAssistantMessage();
+          scrollWorkspaceToBottom();
+        }, 600);
+      }
+
+      navItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          setActiveView(item.dataset.view);
+        });
+      });
+
+      previewTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => {
+          openPreview(
+            trigger.dataset.previewName,
+            trigger.dataset.previewType,
+            trigger.dataset.previewPages,
+            trigger.dataset.previewDate
+          );
+        });
+      });
+
+      ticketCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          openTicketDetail(card);
+        });
+      });
+
+      historyCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          openHistoryDetail(card);
+        });
+      });
+
+      workspaceAskButton.addEventListener("click", sendWorkspaceMessage);
+      workspaceScrollButton.addEventListener("click", scrollWorkspaceToBottom);
+      emptyChatAskButton.addEventListener("click", () => {
+        emptyChatInput.focus();
+      });
+      emptyChatScrollButton.addEventListener("click", () => {
+        emptyChatInput.focus();
+      });
+      workspaceInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          sendWorkspaceMessage();
+        }
+      });
+      emptyChatInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          emptyChatInput.blur();
+        }
+      });
+
+      previewBackButton.addEventListener("click", () => {
+        showSidebarMode(previousSidebarMode === "preview" ? "history" : previousSidebarMode);
+      });
+
+      ticketBackButton.addEventListener("click", () => {
+        ticketCards.forEach((card) => card.classList.remove("is-active"));
+        showTicketStage("list");
+        showSidebarMode("history");
+      });
+
+      closeTicketButton.addEventListener("click", () => {
+        ticketCards.forEach((card) => card.classList.remove("is-active"));
+        historyCards.forEach((card) => card.classList.remove("is-active"));
+        activeTicket = null;
+        chatHeaderPill.textContent = "No ticket selected";
+        showChatStage("empty");
+        showSidebarMode("history");
+      });
+
+      newChatButton.addEventListener("click", () => {
+        ticketCards.forEach((card) => card.classList.remove("is-active"));
+        historyCards.forEach((card) => card.classList.remove("is-active"));
+        activeTicket = null;
+        chatHeaderPill.textContent = "No ticket selected";
+        emptyChatInput.value = "";
+        showChatStage("empty");
+        showSidebarMode("history");
+        setActiveView("chat");
+        emptyChatInput.focus();
+      });
+
+      logoutButton.addEventListener("click", () => {
+        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        window.location.href = "/frontend/index.html";
+      });
+
+      settingsLogoutButton.addEventListener("click", () => {
+        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        window.location.href = "/frontend/index.html";
+      });
+
+      scrollWorkspaceToBottom();
+    </script>
   </body>
 </html>

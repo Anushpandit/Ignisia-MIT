@@ -17,6 +17,9 @@ interface AuthResponse {
   success: boolean;
   message: string;
   role?: "employee" | "customer";
+  full_name?: string;
+  username?: string;
+  email?: string;
 }
 
 type AuthMode = "login" | "signup";
@@ -24,6 +27,7 @@ type Role = "employee" | "customer";
 type FormFieldMap = Record<string, string>;
 
 const API_BASE_URL = "http://localhost:5000";
+const SESSION_STORAGE_KEY = "knowledgeAgentSession";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -240,6 +244,18 @@ async function submitLogin(event: Event): Promise<void> {
     if (!response.ok || !data.success) {
       setBanner(errorBanner, data.message || "Login failed.", true);
       return;
+    }
+
+    if (data.role && data.full_name) {
+      window.localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          role: data.role,
+          full_name: data.full_name,
+          username: data.username ?? payload.username,
+          email: data.email ?? "",
+        }),
+      );
     }
 
     if (data.role === "customer") {
