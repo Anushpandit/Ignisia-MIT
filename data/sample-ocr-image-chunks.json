@@ -1,0 +1,63 @@
+{
+  "source_file": "sample-ocr-image.png",
+  "source_type": "image",
+  "chunk_count": 4,
+  "chunks": [
+    {
+      "chunk_index": 0,
+      "token_count": 94,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "sample-ocr-image.png",
+        "source_type": "image",
+        "document_date": "",
+        "block_type": "image_text",
+        "heading_context": "Image Page 1",
+        "sub_chunk_index": 0
+      },
+      "text": "LLaMA: Open and Efficient Foundation Language Models\n\n\n    Hugo Touvron; Thibaut Lavril; Gautier Izacard; Xavier Martinet\nMarie-Anne Lachaux, Timothee Lacroix, Baptiste Roziére, Naman Goyal\n    Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin\n    Edouard Grave; Guillaume Lample*\n\n                              Meta Al"
+    },
+    {
+      "chunk_index": 1,
+      "token_count": 479,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "sample-ocr-image.png",
+        "source_type": "image",
+        "document_date": "",
+        "block_type": "image_text",
+        "heading_context": "Image Page 1",
+        "sub_chunk_index": 1
+      },
+      "text": "Abstract                                             performance, a smaller one   trained  longer  will\n              We introduce LLaMA, a collection of founda-              ultimately be cheaper at inference.  For instance,\n              tion language models ranging from 7B to 65B              although Hoffmann.  et al.         2022 recommends\n              parameters.     We train our models on trillions         training a 10B model on 200B tokens,       we find\n              of tokens, and show that it is possible to train         that the performance of a 7B model continues to\n     S        state-of-the-art models using     publicly  avail-       improve even after 1T tokens.\n    AN        able datasets    exclusively, without  resorting\n    LO        to proprietary   and   inaccessible datasets. In           The focus of this work is to  train a series  of\n              particular, LLaMA-13B   outperforms        GPT-3         language models that achieve the best possible per-\n              (175B)   on most    benchmarks,     and     LLaMA-       formance at various inference budgets, by training\n              os competitive     Wit                      models       on more tokens than what is typically used.    The\n    —         all our      0 the research community!                   resulting models, called LLaMA,     ranges from 7B\n                                                                       to 65B parameters with competitive performance\n     O   1    Introduction                                             compared to the best existing LLMs.  For instance,\n                                                                       LLaMA-13B outperforms GPT-3 on most bench-\n    QO   Large Languages Models (LLMs) trained on mas-                 marks, despite being 10x smaller. We believe that\n    ed   sive corpora of texts have shown their ability to per-        (his    model will help democratize the access and\n     —   form new tasks from textual instructions or from a            study of LLMs, since it can be run on a single GPU.\n     >   few examples (Brown et al., 2020). These few-shot              A¢ the higher-end of the scale, our 65B-parameter\n     ~   properties first appeared when scaling models to 4            model is also competitive with the best large lan-"
+    },
+    {
+      "chunk_index": 2,
+      "token_count": 494,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "sample-ocr-image.png",
+        "source_type": "image",
+        "document_date": "",
+        "block_type": "image_text",
+        "heading_context": "Image Page 1",
+        "sub_chunk_index": 2
+      },
+      "text": "~   properties first appeared when scaling models to 4            model is also competitive with the best large lan-\n    on   sufficient size (Kaplan et al., 2020), resulting in a         guage models such as Chinchilla or PALM-540B.\n         line of work that focuses on further scaling these\n         models (Chowdhery et al., 2022; Rae et al., 2021).            Unlike Chinchilla,         PaLM, or GPT-3, we only\n     =   These efforts    are  based  on    the    assumption that     use publicly available data, making our work com-\n     =   more parameters will lead to better performance.              patible  with open-sourcing, while   most existing\n         However, recent work from Hoffmann et al. 2022                models rely on data which is either not publicly\n     >   shows that, for a given compute budget, the best              available or undocumented (e.g.   “Books — 2TB” or\n         performances are not achieved by the largest mod-     “Social media                             There exist some\n         els, but by smaller models trained on more data.              exceptions, notably     OPT (Zhang  et al., 2022),\n     <         The objective   of the scaling     laws    from Hoff-   GPT-NeoX (Black et al., 2022),         BLOOM (Scao\n         mann et al.           2022 is to determine    how to best             2022 and GLM (Zeng et al., 2022), but none\n         scale the dataset and model sizes for a particular            that are competitive with PALM-62B or Chinchilla.\n         training compute budget. However, this objective\n         disregards the   inference budget,          which becomes      In the rest of this paper, we present an overview\n        critical when serving a language model at scale. of the modifications we made to the transformer\n        In this context, given a target level of performance, architecture (Vaswani et al., 2017), as well as our\n        the preferred model is not the fastest to train but the training method. We then report the performance of\n        fastest at inference, and although it may be cheaper ~~ our models and compare with others LLMs on a set"
+    },
+    {
+      "chunk_index": 3,
+      "token_count": 143,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "sample-ocr-image.png",
+        "source_type": "image",
+        "document_date": "",
+        "block_type": "image_text",
+        "heading_context": "Image Page 1",
+        "sub_chunk_index": 3
+      },
+      "text": "the preferred model is not the fastest to train but the training method. We then report the performance of\n        fastest at inference, and although it may be cheaper ~~ our models and compare with others LLMs on a set\n        to train a large model to reach a certain level of of standard benchmarks. Finally, we expose some\n         _                                                             of the biases and toxicity encoded in our models,\n                 Equal contribution.  Correspondence:   {htouvron,     .\n         thibautlav,gizacard,egrave,glample}@meta.com                       using some of the most recent benchmarks from\n            \"https: //github.com/facebookresearch/11ama                the responsible AI community."
+    }
+  ]
+}

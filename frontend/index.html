@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KnowledgeAgent Auth</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="auth-body">
+    <main class="auth-shell">
+      <section class="auth-card" aria-label="Authentication">
+        <div class="auth-tabs" role="tablist" aria-label="Authentication tabs">
+          <button
+            id="login-tab"
+            class="auth-tab is-active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="login-panel"
+          >
+            Login
+          </button>
+          <button
+            id="signup-tab"
+            class="auth-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="signup-panel"
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <div id="auth-success" class="banner banner-success is-hidden" aria-live="polite"></div>
+        <div id="auth-error" class="banner banner-error is-hidden" aria-live="polite"></div>
+
+        <section id="login-panel" class="auth-panel" role="tabpanel" aria-labelledby="login-tab">
+          <form id="login-form" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="login-username">Username</label>
+              <input id="login-username" name="username" class="field-input" type="text" />
+              <p id="login-username-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="login-password">Password</label>
+              <input id="login-password" name="password" class="field-input" type="password" />
+              <p id="login-password-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="login-role">Role</label>
+              <select id="login-role" name="role" class="field-input">
+                <option value="">Select role</option>
+                <option value="employee">Employee</option>
+                <option value="customer">Customer</option>
+              </select>
+              <p id="login-role-error" class="field-error"></p>
+            </div>
+
+            <button id="login-submit" class="primary-button" type="submit">Submit</button>
+          </form>
+
+          <p class="form-footnote">
+            Don't have an account?
+            <button id="goto-signup" class="text-link" type="button">Sign Up</button>
+          </p>
+        </section>
+
+        <section
+          id="signup-panel"
+          class="auth-panel is-hidden"
+          role="tabpanel"
+          aria-labelledby="signup-tab"
+        >
+          <form id="signup-form" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="signup-full-name">Full Name</label>
+              <input id="signup-full-name" name="full_name" class="field-input" type="text" />
+              <p id="signup-full-name-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-username">Username</label>
+              <input id="signup-username" name="username" class="field-input" type="text" />
+              <p id="signup-username-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-email">Email</label>
+              <input id="signup-email" name="email" class="field-input" type="email" />
+              <p id="signup-email-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-password">Password</label>
+              <input id="signup-password" name="password" class="field-input" type="password" />
+              <p id="signup-password-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-confirm-password">Confirm Password</label>
+              <input
+                id="signup-confirm-password"
+                name="confirm_password"
+                class="field-input"
+                type="password"
+              />
+              <p id="signup-confirm-password-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-role">Role</label>
+              <select id="signup-role" name="role" class="field-input">
+                <option value="">Select role</option>
+                <option value="employee">Employee</option>
+                <option value="customer">Customer</option>
+              </select>
+              <p id="signup-role-error" class="field-error"></p>
+            </div>
+
+            <div class="field-group">
+              <label id="signup-entity-id-label" class="field-label" for="signup-entity-id">
+                Employee ID (Emp_ID)
+              </label>
+              <input id="signup-entity-id" name="entity_id" class="field-input" type="text" />
+              <p id="signup-entity-id-error" class="field-error"></p>
+            </div>
+
+            <button id="signup-submit" class="primary-button" type="submit">Submit</button>
+          </form>
+
+          <p class="form-footnote">
+            Already have an account?
+            <button id="goto-login" class="text-link" type="button">Login</button>
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

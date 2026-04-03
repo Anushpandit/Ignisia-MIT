@@ -3,7 +3,12 @@
 .venv/
 __pycache__/
 *.py[cod]
+*.db
+.DS_Store
 
 .python-version
-data/
+data/*
+!data/sample-*.md
+!data/sample-*-chunks.json
 eng.traineddata
+backend/__pycache__/

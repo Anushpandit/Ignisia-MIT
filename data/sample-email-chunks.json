@@ -1,0 +1,81 @@
+{
+  "source_file": "sample-email.eml",
+  "source_type": "email",
+  "chunk_count": 4,
+  "chunks": [
+    {
+      "chunk_index": 0,
+      "token_count": 87,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "sample-email.eml",
+        "source_type": "email",
+        "document_date": "Fri, 03 Apr 2026 09:30:00 +0530",
+        "block_type": "email_body",
+        "heading_context": "HTML Body",
+        "sender": "Alex Manager <alex.manager@example.com>",
+        "subject": "Q2 Operations Update",
+        "preserve_small_chunk": true,
+        "sub_chunk_index": 0
+      },
+      "text": "Subject: Q2 Operations Update\nFrom: Alex Manager <alex.manager@example.com>\nTo: ops-team@example.com\nCC: finance@example.com\nDate: Fri, 03 Apr 2026 09:30:00 +0530\n\nHello team,\n\nPlease review the attached files before the afternoon review call.\n\nHighlights:\n- Budget approved\n- Vendor shortlist prepared\n- Final PDF summary attached for reference\n\nRegards,\nAlex"
+    },
+    {
+      "chunk_index": 1,
+      "token_count": 19,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "meeting-notes.txt",
+        "source_type": "text",
+        "document_date": "Fri, 03 Apr 2026 09:30:00 +0530",
+        "block_type": "paragraph",
+        "heading_context": "",
+        "parent_email_file": "sample-email.eml",
+        "attachment_filename": "meeting-notes.txt",
+        "attachment_file_type": "text",
+        "attachment_content_type": "text/plain",
+        "preserve_small_chunk": true,
+        "sub_chunk_index": 0
+      },
+      "text": "Team,\n\nAttached are the meeting notes for today.\n\n- Budget approved\n- Vendor shortlist ready"
+    },
+    {
+      "chunk_index": 2,
+      "token_count": 17,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "tiny-chart.png",
+        "source_type": "image",
+        "document_date": "Fri, 03 Apr 2026 09:30:00 +0530",
+        "block_type": "image_text",
+        "heading_context": "",
+        "parent_email_file": "sample-email.eml",
+        "attachment_filename": "tiny-chart.png",
+        "attachment_file_type": "image",
+        "attachment_content_type": "image/png",
+        "preserve_small_chunk": true,
+        "sub_chunk_index": 0
+      },
+      "text": "Image attachment: tiny-chart.png\nFormat: PNG\nDimensions: 1x1"
+    },
+    {
+      "chunk_index": 3,
+      "token_count": 5,
+      "metadata": {
+        "customer_id": "demo-customer",
+        "source_file": "quarterly-summary.pdf",
+        "source_type": "pdf",
+        "document_date": "Fri, 03 Apr 2026 09:30:00 +0530",
+        "block_type": "paragraph",
+        "heading_context": "",
+        "parent_email_file": "sample-email.eml",
+        "attachment_filename": "quarterly-summary.pdf",
+        "attachment_file_type": "pdf",
+        "attachment_content_type": "application/pdf",
+        "preserve_small_chunk": true,
+        "sub_chunk_index": 0
+      },
+      "text": "Quarterly summary atta"
+    }
+  ]
+}
