@@ -1,0 +1,10 @@
+[project]
+name = "ignisia-mit"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "liteparse>=1.2.1",
+    "openpyxl>=3.1.5",
+]

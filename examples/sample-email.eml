@@ -1,0 +1,70 @@
+From: Alex Manager <alex.manager@example.com>
+To: ops-team@example.com
+Cc: finance@example.com
+Subject: Q2 Operations Update
+Date: Fri, 03 Apr 2026 09:30:00 +0530
+Message-ID: <sample-email-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary-001"
+
+--mixed-boundary-001
+Content-Type: multipart/alternative; boundary="alt-boundary-001"
+
+--alt-boundary-001
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello team,
+
+Please review the attached files before the afternoon review call.
+
+Highlights:
+- Budget approved
+- Vendor shortlist prepared
+- Final PDF summary attached for reference
+
+Regards,
+Alex
+
+--alt-boundary-001
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+<html>
+  <body>
+    <p>Hello team,</p>
+    <p>Please review the attached files before the afternoon review call.</p>
+    <p><strong>Highlights:</strong></p>
+    <ul>
+      <li>Budget approved</li>
+      <li>Vendor shortlist prepared</li>
+      <li>Final PDF summary attached for reference</li>
+    </ul>
+    <p>Regards,<br>Alex</p>
+  </body>
+</html>
+
+--alt-boundary-001--
+
+--mixed-boundary-001
+Content-Type: text/plain; charset="utf-8"; name="meeting-notes.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="meeting-notes.txt"
+
+VGVhbSwKCkF0dGFjaGVkIGFyZSB0aGUgbWVldGluZyBub3RlcyBmb3IgdG9kYXkuCgotIEJ1ZGdldCBhcHByb3ZlZAotIFZlbmRvciBzaG9ydGxpc3QgcmVhZHkK
+
+--mixed-boundary-001
+Content-Type: image/png; name="tiny-chart.png"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="tiny-chart.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=
+
+--mixed-boundary-001
+Content-Type: application/pdf; name="quarterly-summary.pdf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="quarterly-summary.pdf"
+
+JVBERi0xLjQKMSAwIG9iajw8IC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUiA+PmVuZG9iagoyIDAgb2JqPDwgL1R5cGUgL1BhZ2VzIC9Db3VudCAxIC9LaWRzIFszIDAgUl0gPj5lbmRvYmoKMyAwIG9iajw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgMjAwIDIwMF0gL0NvbnRlbnRzIDQgMCBSIC9SZXNvdXJjZXM8PCAvRm9udDw8IC9GMSA1IDAgUiA+PiA+PiA+PmVuZG9iago0IDAgb2JqPDwgL0xlbmd0aCA0NCA+PnN0cmVhbQpCVCAvRjEgMTggVGYgMjAgMTAwIFRkIChRdWFydGVybHkgc3VtbWFyeSBhdHRhY2hlZC4pIFRqIEVUCmVuZHN0cmVhbSBlbmRvYmoKNSAwIG9iajw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDA2MyAwMDAwMCBuIAowMDAwMDAwMTIyIDAwMDAwIG4gCjAwMDAwMDAyNDggMDAwMDAgbiAKMDAwMDAwMDM0MyAwMDAwMCBuIAp0cmFpbGVyPDwgL1Jvb3QgMSAwIFIgL1NpemUgNiA+PgpzdGFydHhyZWYKNDEzCiUlRU9GCg==
+
+--mixed-boundary-001--
