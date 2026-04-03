@@ -10,6 +10,9 @@ Ignisia-MIT is a retrieval-focused MVP for teams that need to search across frag
 - persistent vector storage with customer isolation
 - retrieval-augmented answer generation with Groq
 - source references and date-aware conflict handling
+- customer and employee ticket workflows backed by SQLite
+- ticket-scoped chat history in the app UI
+- evaluation utilities for replaying RAG questions against the sample corpus
 
 ## Problem
 
@@ -30,21 +33,27 @@ This project is built to turn those scattered files into a retrieval-ready knowl
 - Token-aware chunking in [`chunker.py`](chunker.py)
 - Embedding generation and ChromaDB storage in [`embedder.py`](embedder.py)
 - RAG answer generation with Groq in [`rag.py`](rag.py)
+- Retrieval confidence gate in [`rag.py`](rag.py)
 - Source attribution and conflict-aware answer formatting
 - Flask auth backend in [`backend/`](backend/)
 - Login/signup frontend in [`frontend/`](frontend/)
+- Customer ticket creation and chat UI in [`pages/customer.html`](pages/customer.html)
 - Employee dashboard UI in [`pages/employee.html`](pages/employee.html)
+- Ticket message storage and uploaded-file records in SQLite
+- Close-ticket and delete-chat flows in the employee dashboard
+- Eval replay script in [`eval_rag.py`](eval_rag.py)
+- Sample eval comparison notes in [`compare.md`](compare.md)
 - Unit tests for chunking and embedding logic in [`tests/unit/`](tests/unit)
 - Manual parsing/sample-output scripts in [`tests/manual_outputs/`](tests/manual_outputs)
 - End-to-end sample pipeline in [`test_cases/pipeline.py`](test_cases/pipeline.py)
 
 ### Still limited / not finished
 
-- no production API endpoint yet for the RAG flow
-- no real frontend integration with the retrieval pipeline yet
 - `.msg` parsing is not supported yet
 - legacy `.xls` parsing is not supported yet
 - conflict detection is heuristic and date-driven, not full semantic contradiction detection
+- Chroma embeddings are still stored per customer, not per ticket
+- deleting a chat currently removes SQLite ticket/message/file records, but not already-embedded Chroma vectors for that ticket
 
 ## Architecture
 
@@ -88,7 +97,10 @@ Frontend (Login / Signup / Employee + Customer pages)
 Flask Backend
     |
     v
-SQLite User Store
+SQLite Ticket + User Store
+    |
+    v
+ChromaDB + Groq-backed Retrieval
 ```
 
 ## LiteParser In Action
@@ -321,6 +333,16 @@ When you call `ask(customer_id, question)`:
    - conflict information
    - display-ready source summary
 
+`rag.py` also now includes a retrieval confidence threshold:
+
+- `RETRIEVAL_CONFIDENCE_THRESHOLD = 0.75`
+
+If the best retrieved Chroma distance is above that threshold, the pipeline exits early and returns:
+
+`I don't have enough information in your documents to answer this.`
+
+This behavior is useful for reducing unsupported answers, but it is currently very aggressive for the sample evaluation set and likely needs recalibration.
+
 ## How Retrieval Works
 
 Retrieval is semantic, not keyword-only.
@@ -444,14 +466,34 @@ rag.py                 Groq-backed retrieval answer layer
 
 ## Authentication Module
 
-The project also includes a basic auth flow for customer and employee roles:
+The project includes auth plus a ticketing workflow for customer and employee roles:
 
 - signup and login UI in [`frontend/`](frontend/)
 - Flask API in [`backend/app.py`](backend/app.py)
 - SQLite persistence in [`backend/database.py`](backend/database.py)
 - bcrypt password hashing in [`backend/auth.py`](backend/auth.py)
+- customer ticket creation with file uploads
+- employee ticket review with chat history
+- ticket close action
+- employee-side delete-chat action
 
-Successful logins redirect users to role-specific placeholder pages in [`pages/`](pages/).
+Successful logins redirect users to role-specific pages in [`pages/`](pages/).
+
+### Delete Chat Behavior
+
+The employee dashboard includes a red `Delete chat` button next to `Close ticket`.
+
+When used, it removes the selected ticket from SQLite by deleting:
+
+- the `tickets` row
+- all `ticket_messages` rows for that ticket
+- all `uploaded_files` rows for that ticket
+
+Important limitation:
+
+- this does not yet remove any already-embedded document chunks from ChromaDB
+- embeddings are stored by `customer_id`, not `ticket_id`
+- because of that, the app does not yet know which stored vectors came from one exact ticket
 
 ## Setup
 
@@ -512,6 +554,27 @@ This script:
 - lets you ask interactive questions
 - shows retrieved chunks and the final Groq answer
 
+## Running The Sample Evaluation
+
+The repo now includes an eval replay script for the sample PDF:
+
+```bash
+uv run python eval_rag.py
+```
+
+This script:
+
+- uses the existing Chroma collection for customer `rag-eval-sample-report`
+- replays the 27 questions listed in [`compare.md`](compare.md)
+- calls the current `rag.py`
+- records best retrieval distances and whether the confidence gate fired
+- writes structured results to [`rag_eval_results.json`](rag_eval_results.json)
+
+Related files:
+
+- [`compare.md`](compare.md): human-readable evaluation notes and before/after summaries
+- [`rag_eval_results.json`](rag_eval_results.json): raw machine-readable replay output
+
 ## Running Tests
 
 ### Unit tests
@@ -534,13 +597,14 @@ uv run python tests/manual_outputs/test_save_pdf_output.py
 - `.msg` email parsing is not implemented
 - `.xls` spreadsheet parsing is not implemented
 - duplicate chunk-id edge cases can still matter if chunk metadata is not unique enough
-- no production retrieval API route exists yet
-- current frontend is mostly mock/stub UI and is not fully connected to the RAG backend
+- the retrieval confidence threshold in [`rag.py`](rag.py) is not calibrated yet for the current Chroma distance distribution
+- ticket deletion removes SQLite records but does not yet remove Chroma vectors for those uploaded documents
+- vector storage is customer-scoped, so safe per-ticket embedding deletion needs additional metadata such as `ticket_id`
 
 ## Roadmap
 
-- connect the RAG pipeline to a real backend endpoint
-- connect the employee dashboard to live retrieval results
+- calibrate or redesign the retrieval confidence gate
+- add ticket-aware embedding metadata so delete-chat can also remove Chroma vectors safely
 - improve conflict detection beyond date heuristics
 - expand test coverage for `rag.py`
 - support additional enterprise document formats

@@ -33,6 +33,51 @@ CREATE TABLE IF NOT EXISTS employees (
 """
 
 
+TICKETS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS tickets (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id       TEXT NOT NULL,
+  customer_username TEXT NOT NULL,
+  customer_name     TEXT NOT NULL,
+  subject           TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'Open',
+  last_message      TEXT NOT NULL DEFAULT '',
+  created_at        TEXT DEFAULT (datetime('now')),
+  updated_at        TEXT DEFAULT (datetime('now'))
+);
+"""
+
+
+TICKET_MESSAGES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS ticket_messages (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_id        INTEGER NOT NULL,
+  role             TEXT NOT NULL,
+  sender_role      TEXT NOT NULL,
+  content          TEXT NOT NULL,
+  attachments_json TEXT NOT NULL DEFAULT '[]',
+  created_at       TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(ticket_id) REFERENCES tickets(id)
+);
+"""
+
+
+UPLOADED_FILES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS uploaded_files (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_id     INTEGER NOT NULL,
+  customer_id   TEXT NOT NULL,
+  filename      TEXT NOT NULL,
+  content_type  TEXT NOT NULL DEFAULT '',
+  file_type     TEXT NOT NULL DEFAULT '',
+  parse_status  TEXT NOT NULL DEFAULT 'pending',
+  error_message TEXT NOT NULL DEFAULT '',
+  created_at    TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(ticket_id) REFERENCES tickets(id)
+);
+"""
+
+
 def _get_connection() -> sqlite3.Connection:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
@@ -44,6 +89,9 @@ def initialize_database() -> None:
         with _get_connection() as connection:
             connection.execute(CUSTOMERS_SCHEMA)
             connection.execute(EMPLOYEES_SCHEMA)
+            connection.execute(TICKETS_SCHEMA)
+            connection.execute(TICKET_MESSAGES_SCHEMA)
+            connection.execute(UPLOADED_FILES_SCHEMA)
             connection.commit()
     except sqlite3.Error as error:
         raise RuntimeError("Failed to initialize database") from error
@@ -133,6 +181,191 @@ def get_latest_user(role: str) -> Optional[sqlite3.Row]:
             return cursor.fetchone()
     except sqlite3.Error as error:
         raise RuntimeError("Failed to fetch latest user") from error
+
+
+def create_ticket(
+    customer_id: str,
+    customer_username: str,
+    customer_name: str,
+    subject: str,
+    status: str = "Open",
+) -> sqlite3.Row:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO tickets (customer_id, customer_username, customer_name, subject, status)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (customer_id, customer_username, customer_name, subject, status),
+            )
+            ticket_id = cursor.lastrowid
+            connection.commit()
+            result = connection.execute(
+                "SELECT * FROM tickets WHERE id = ?",
+                (ticket_id,),
+            ).fetchone()
+            if result is None:
+                raise RuntimeError("Created ticket could not be retrieved")
+            return result
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to create ticket") from error
+
+
+def add_ticket_message(
+    ticket_id: int,
+    role: str,
+    sender_role: str,
+    content: str,
+    attachments_json: str = "[]",
+) -> sqlite3.Row:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO ticket_messages (ticket_id, role, sender_role, content, attachments_json)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (ticket_id, role, sender_role, content, attachments_json),
+            )
+            connection.execute(
+                """
+                UPDATE tickets
+                SET last_message = ?, updated_at = datetime('now')
+                WHERE id = ?
+                """,
+                (content[:400], ticket_id),
+            )
+            message_id = cursor.lastrowid
+            connection.commit()
+            result = connection.execute(
+                "SELECT * FROM ticket_messages WHERE id = ?",
+                (message_id,),
+            ).fetchone()
+            if result is None:
+                raise RuntimeError("Created ticket message could not be retrieved")
+            return result
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to add ticket message") from error
+
+
+def record_uploaded_file(
+    ticket_id: int,
+    customer_id: str,
+    filename: str,
+    content_type: str,
+    file_type: str,
+    parse_status: str,
+    error_message: str = "",
+) -> None:
+    try:
+        with _get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO uploaded_files (
+                    ticket_id, customer_id, filename, content_type, file_type, parse_status, error_message
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (ticket_id, customer_id, filename, content_type, file_type, parse_status, error_message),
+            )
+            connection.commit()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to record uploaded file") from error
+
+
+def list_tickets_for_customer(customer_username: str) -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM tickets
+                WHERE customer_username = ?
+                ORDER BY datetime(updated_at) DESC, id DESC
+                """,
+                (customer_username,),
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list customer tickets") from error
+
+
+def list_all_tickets() -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM tickets
+                ORDER BY datetime(updated_at) DESC, id DESC
+                """
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list tickets") from error
+
+
+def get_ticket(ticket_id: int) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                "SELECT * FROM tickets WHERE id = ?",
+                (ticket_id,),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to get ticket") from error
+
+
+def update_ticket_status(ticket_id: int, status: str) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            connection.execute(
+                """
+                UPDATE tickets
+                SET status = ?, updated_at = datetime('now')
+                WHERE id = ?
+                """,
+                (status, ticket_id),
+            )
+            connection.commit()
+            cursor = connection.execute(
+                "SELECT * FROM tickets WHERE id = ?",
+                (ticket_id,),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to update ticket status") from error
+
+
+def get_ticket_messages(ticket_id: int) -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM ticket_messages
+                WHERE ticket_id = ?
+                ORDER BY datetime(created_at) ASC, id ASC
+                """,
+                (ticket_id,),
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to get ticket messages") from error
+
+
+def delete_ticket(ticket_id: int) -> bool:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute("DELETE FROM uploaded_files WHERE ticket_id = ?", (ticket_id,))
+            connection.execute("DELETE FROM ticket_messages WHERE ticket_id = ?", (ticket_id,))
+            ticket_cursor = connection.execute("DELETE FROM tickets WHERE id = ?", (ticket_id,))
+            connection.commit()
+            return ticket_cursor.rowcount > 0
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to delete ticket") from error
 
 
 initialize_database()

@@ -25,6 +25,9 @@
         --amber: #d97706;
         --amber-bg: #fef3c7;
         --highlight: #fef9c3;
+        --danger: #dc2626;
+        --danger-bg: #fef2f2;
+        --danger-border: #fecaca;
       }
 
       * {
@@ -462,6 +465,21 @@
         cursor: pointer;
       }
 
+      .danger-button {
+        border: 1px solid var(--danger-border);
+        border-radius: 6px;
+        background: var(--danger-bg);
+        color: var(--danger);
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .danger-button:disabled,
+      .secondary-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
       .logout-button {
         width: 100%;
         border: 0;
@@ -526,6 +544,11 @@
       .badge-pending {
         color: var(--amber);
         background: var(--amber-bg);
+      }
+
+      .badge-closed {
+        color: #475569;
+        background: #e2e8f0;
       }
 
       .customer-table {
@@ -842,6 +865,7 @@
                   </div>
                 </div>
                 <div class="workspace-toolbar-actions">
+                  <button class="danger-button" id="deleteChatButton" disabled>Delete chat</button>
                   <button class="secondary-button" id="closeTicketButton">Close ticket</button>
                 </div>
               </div>
@@ -897,64 +921,7 @@
               </div>
             </header>
             <div class="content-scroll">
-              <div class="panel-stack">
-                <button
-                  class="ticket-card"
-                  data-ticket-id="4821"
-                  data-ticket-customer="Acme Corp"
-                  data-ticket-subject="Refund policy inquiry — bulk order Mar 2025"
-                  data-ticket-status="Open"
-                  data-ticket-date="Mar 12 2025"
-                >
-                  <div class="ticket-top">
-                    <div>
-                      <div class="ticket-id">#4821</div>
-                      <div class="ticket-customer">Acme Corp</div>
-                    </div>
-                    <span class="badge badge-open">Open</span>
-                  </div>
-                  <div class="ticket-subject">Refund policy inquiry — bulk order Mar 2025</div>
-                  <div class="ticket-date">Mar 12 2025</div>
-                </button>
-
-                <button
-                  class="ticket-card"
-                  data-ticket-id="4828"
-                  data-ticket-customer="Northwind Supply"
-                  data-ticket-subject="Pricing discrepancy for April renewal quote"
-                  data-ticket-status="Pending"
-                  data-ticket-date="Mar 14 2025"
-                >
-                  <div class="ticket-top">
-                    <div>
-                      <div class="ticket-id">#4828</div>
-                      <div class="ticket-customer">Northwind Supply</div>
-                    </div>
-                    <span class="badge badge-pending">Pending</span>
-                  </div>
-                  <div class="ticket-subject">Pricing discrepancy for April renewal quote</div>
-                  <div class="ticket-date">Mar 14 2025</div>
-                </button>
-
-                <button
-                  class="ticket-card"
-                  data-ticket-id="4836"
-                  data-ticket-customer="Harbor Foods"
-                  data-ticket-subject="Document mismatch on return approval terms"
-                  data-ticket-status="Open"
-                  data-ticket-date="Mar 18 2025"
-                >
-                  <div class="ticket-top">
-                    <div>
-                      <div class="ticket-id">#4836</div>
-                      <div class="ticket-customer">Harbor Foods</div>
-                    </div>
-                    <span class="badge badge-open">Open</span>
-                  </div>
-                  <div class="ticket-subject">Document mismatch on return approval terms</div>
-                  <div class="ticket-date">Mar 18 2025</div>
-                </button>
-              </div>
+              <div class="panel-stack" id="ticketList"></div>
             </div>
           </div>
 
@@ -968,6 +935,10 @@
           </header>
           <div class="content-scroll">
             <div class="panel-stack">
+              <div class="setting-row">
+                <div class="setting-label">Employee ID</div>
+                <div class="setting-value" id="profileEmployeeIdValue">Not available</div>
+              </div>
               <div class="setting-row">
                 <div class="setting-label">Profile name</div>
                 <div class="setting-value" id="profileNameValue">Employee</div>
@@ -992,67 +963,7 @@
             <button class="header-action" aria-label="More actions">···</button>
           </div>
 
-          <div class="history-list">
-            <button
-              class="history-card"
-              data-history-ticket="4821"
-              data-history-customer="Acme Corp"
-              data-history-subject="Refund policy inquiry — bulk order Mar 2025"
-              data-history-status="Open"
-              data-history-date="Mar 12 2025"
-            >
-              <div class="history-top">
-                <div>
-                  <div class="history-title">Acme Corp · Ticket #4821</div>
-                  <div class="history-meta">Customer chat · Mar 12 2025</div>
-                </div>
-                <span class="badge badge-open">Open</span>
-              </div>
-              <div class="history-snippet">
-                Refund policy inquiry and conflict review for the March 2025 bulk order thread.
-              </div>
-            </button>
-
-            <button
-              class="history-card"
-              data-history-ticket="4828"
-              data-history-customer="Northwind Supply"
-              data-history-subject="Pricing discrepancy for April renewal quote"
-              data-history-status="Pending"
-              data-history-date="Mar 14 2025"
-            >
-              <div class="history-top">
-                <div>
-                  <div class="history-title">Northwind Supply · Ticket #4828</div>
-                  <div class="history-meta">Customer chat · Mar 14 2025</div>
-                </div>
-                <span class="badge badge-pending">Pending</span>
-              </div>
-              <div class="history-snippet">
-                Quote follow-up about renewal pricing differences and spreadsheet references.
-              </div>
-            </button>
-
-            <button
-              class="history-card"
-              data-history-ticket="4836"
-              data-history-customer="Harbor Foods"
-              data-history-subject="Document mismatch on return approval terms"
-              data-history-status="Open"
-              data-history-date="Mar 18 2025"
-            >
-              <div class="history-top">
-                <div>
-                  <div class="history-title">Harbor Foods · Ticket #4836</div>
-                  <div class="history-meta">Customer chat · Mar 18 2025</div>
-                </div>
-                <span class="badge badge-open">Open</span>
-              </div>
-              <div class="history-snippet">
-                Return approval mismatch between older policy wording and the latest customer thread.
-              </div>
-            </button>
-          </div>
+          <div class="history-list" id="historyList"></div>
         </section>
 
         <section class="sidebar-mode" data-sidebar-mode="sources">
@@ -1187,16 +1098,17 @@
       const views = document.querySelectorAll("[data-view-panel]");
       const chatStages = document.querySelectorAll("[data-chat-stage]");
       const newChatButton = document.getElementById("newChatButton");
+      const ticketList = document.getElementById("ticketList");
+      const historyList = document.getElementById("historyList");
       const logoutButton = document.getElementById("logoutButton");
       const settingsLogoutButton = document.getElementById("settingsLogoutButton");
+      const profileEmployeeIdValue = document.getElementById("profileEmployeeIdValue");
       const chatHeaderPill = document.getElementById("chatHeaderPill");
       const emptyChatInput = document.getElementById("emptyChatInput");
       const emptyChatAskButton = document.getElementById("emptyChatAskButton");
       const emptyChatScrollButton = document.getElementById("emptyChatScrollButton");
       const profileNameValue = document.getElementById("profileNameValue");
       const profileEmailValue = document.getElementById("profileEmailValue");
-      const ticketCards = document.querySelectorAll(".ticket-card");
-      const historyCards = document.querySelectorAll(".history-card");
       const ticketStages = document.querySelectorAll("[data-ticket-stage]");
       const previewTriggers = document.querySelectorAll("[data-preview-name]");
       const sidebarModes = document.querySelectorAll("[data-sidebar-mode]");
@@ -1208,6 +1120,7 @@
       const workspaceInput = document.getElementById("workspaceInput");
       const workspaceAskButton = document.getElementById("workspaceAskButton");
       const workspaceScrollButton = document.getElementById("workspaceScrollButton");
+      const deleteChatButton = document.getElementById("deleteChatButton");
       const closeTicketButton = document.getElementById("closeTicketButton");
 
       const previewTitle = document.getElementById("previewTitle");
@@ -1224,6 +1137,7 @@
 
       let previousSidebarMode = "sources";
       let activeTicket = null;
+      let currentTickets = [];
 
       function getSessionProfile() {
         try {
@@ -1234,6 +1148,7 @@
               email: "Not available",
               username: "",
               role: "employee",
+              entityId: "",
             };
           }
 
@@ -1249,6 +1164,7 @@
                 : "Not available",
             username: typeof session.username === "string" ? session.username : "",
             role: typeof session.role === "string" ? session.role : "employee",
+            entityId: typeof session.entity_id === "string" ? session.entity_id : "",
           };
         } catch (_error) {
           return {
@@ -1256,11 +1172,13 @@
             email: "Not available",
             username: "",
             role: "employee",
+            entityId: "",
           };
         }
       }
 
       function applyEmployeeProfile(profile) {
+        profileEmployeeIdValue.textContent = profile.entity_id || "Not available";
         profileNameValue.textContent = profile.full_name || "Employee";
         profileEmailValue.textContent = profile.email || "Not available";
       }
@@ -1268,6 +1186,7 @@
       async function hydrateEmployeeProfile() {
         const session = getSessionProfile();
         applyEmployeeProfile({
+          entity_id: session.entityId,
           full_name: session.fullName,
           email: session.email,
         });
@@ -1292,6 +1211,7 @@
             JSON.stringify({
               role: data.role,
               username: data.username,
+              entity_id: data.entity_id,
               full_name: data.full_name,
               email: data.email,
             }),
@@ -1303,6 +1223,40 @@
       }
 
       hydrateEmployeeProfile();
+
+      function formatDateLabel(value) {
+        if (!value) {
+          return "";
+        }
+        const date = new Date(value.replace(" ", "T"));
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        return new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }).format(date);
+      }
+
+      function badgeClass(status) {
+        if (status === "Pending") {
+          return "badge-pending";
+        }
+        if (status === "Closed") {
+          return "badge-closed";
+        }
+        return "badge-open";
+      }
+
+      function setWorkspaceClosedState(status) {
+        const isClosed = status === "Closed";
+        workspaceInput.disabled = isClosed;
+        workspaceAskButton.disabled = isClosed;
+        closeTicketButton.disabled = isClosed;
+        deleteChatButton.disabled = !activeTicket;
+        workspaceInput.placeholder = isClosed ? "This ticket is closed" : "Ask about this ticket";
+      }
 
       function setActiveView(viewName) {
         navItems.forEach((item) => {
@@ -1354,97 +1308,152 @@
         showSidebarMode("preview");
       }
 
-      function openTicketDetail(card) {
-        ticketCards.forEach((ticketCard) => {
-          ticketCard.classList.toggle("is-active", ticketCard === card);
-        });
-        historyCards.forEach((historyCard) => {
-          historyCard.classList.toggle("is-active", historyCard.dataset.historyTicket === card.dataset.ticketId);
-        });
+      function renderTickets(tickets) {
+        currentTickets = tickets;
+        ticketList.innerHTML = "";
+        historyList.innerHTML = "";
 
-        activeTicket = card;
-        previousSidebarMode = document.querySelector("[data-sidebar-mode].is-active")?.dataset.sidebarMode || "sources";
-        const status = card.dataset.ticketStatus;
-        const badgeClass = status === "Pending" ? "badge-pending" : "badge-open";
+        if (tickets.length === 0) {
+          const emptyTicket = document.createElement("div");
+          emptyTicket.className = "setting-row";
+          emptyTicket.innerHTML = `<div class="setting-label">No customer tickets yet.</div>`;
+          ticketList.appendChild(emptyTicket);
 
-        ticketTitle.textContent = `Ticket #${card.dataset.ticketId}`;
-        ticketCustomer.textContent = card.dataset.ticketCustomer;
-        ticketStatusWrap.innerHTML = `<span class="badge ${badgeClass}">${status}</span>`;
-        ticketSubject.textContent = card.dataset.ticketSubject;
-        ticketDate.textContent = card.dataset.ticketDate;
-        workspaceTitle.textContent = `Ticket #${card.dataset.ticketId}`;
-        workspaceSubtitle.textContent = `${card.dataset.ticketCustomer} · ${card.dataset.ticketSubject}`;
-        chatHeaderPill.textContent = card.dataset.ticketCustomer;
-        showChatStage("workspace");
-        setActiveView("chat");
-      }
-
-      function openHistoryDetail(historyCard) {
-        const matchingTicket = Array.from(ticketCards).find(
-          (ticketCard) => ticketCard.dataset.ticketId === historyCard.dataset.historyTicket
-        );
-        if (matchingTicket) {
-          openTicketDetail(matchingTicket);
+          const emptyHistory = document.createElement("div");
+          emptyHistory.className = "setting-row";
+          emptyHistory.innerHTML = `<div class="setting-label">No ticket history yet.</div>`;
+          historyList.appendChild(emptyHistory);
           return;
         }
 
-        historyCards.forEach((card) => {
-          card.classList.toggle("is-active", card === historyCard);
+        tickets.forEach((ticket) => {
+          const ticketCard = document.createElement("button");
+          ticketCard.className = "ticket-card";
+          ticketCard.innerHTML = `
+            <div class="ticket-top">
+              <div>
+                <div class="ticket-id">#${ticket.id}</div>
+                <div class="ticket-customer">${ticket.customer_name}</div>
+              </div>
+              <span class="badge ${badgeClass(ticket.status)}">${ticket.status}</span>
+            </div>
+            <div class="ticket-subject">${ticket.subject}</div>
+            <div class="ticket-date">${formatDateLabel(ticket.created_at)}</div>
+          `;
+          ticketCard.classList.toggle("is-active", String(activeTicket) === String(ticket.id));
+          ticketCard.addEventListener("click", () => {
+            void openTicketChat(ticket.id);
+          });
+          ticketList.appendChild(ticketCard);
+
+          const historyCard = document.createElement("button");
+          historyCard.className = "history-card";
+          historyCard.innerHTML = `
+            <div class="history-top">
+              <div>
+                <div class="history-title">${ticket.customer_name} · Ticket #${ticket.id}</div>
+                <div class="history-meta">Customer chat · ${formatDateLabel(ticket.created_at)}</div>
+              </div>
+              <span class="badge ${badgeClass(ticket.status)}">${ticket.status}</span>
+            </div>
+            <div class="history-snippet">${ticket.last_message || ticket.subject}</div>
+          `;
+          historyCard.classList.toggle("is-active", String(activeTicket) === String(ticket.id));
+          historyCard.addEventListener("click", () => {
+            void openTicketChat(ticket.id);
+          });
+          historyList.appendChild(historyCard);
         });
+      }
+
+      async function fetchTickets() {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/tickets?role=employee&username=${encodeURIComponent(getSessionProfile().username)}`
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            renderTickets([]);
+            return;
+          }
+          renderTickets(data.tickets || []);
+        } catch (_error) {
+          renderTickets([]);
+        }
+      }
+
+      function renderWorkspaceMessages(messages) {
+        workspaceMessages.innerHTML = "";
+        messages.forEach((message) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = `message ${message.role}`;
+          wrapper.innerHTML = `<div class="bubble"></div>`;
+          let text = message.content || "";
+          if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+            text += `\n\nAttachments: ${message.attachments.join(", ")}`;
+          }
+          wrapper.querySelector(".bubble").textContent = text;
+          workspaceMessages.appendChild(wrapper);
+        });
+      }
+
+      async function openTicketChat(ticketId) {
+        const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/messages`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          return;
+        }
+
+        activeTicket = ticketId;
+        previousSidebarMode = document.querySelector("[data-sidebar-mode].is-active")?.dataset.sidebarMode || "sources";
+        renderTickets(currentTickets);
+        const status = data.ticket.status;
+        const statusBadgeClass = badgeClass(status);
+
+        ticketTitle.textContent = `Ticket #${data.ticket.id}`;
+        ticketCustomer.textContent = data.ticket.customer_name;
+        ticketStatusWrap.innerHTML = `<span class="badge ${statusBadgeClass}">${status}</span>`;
+        ticketSubject.textContent = data.ticket.subject;
+        ticketDate.textContent = formatDateLabel(data.ticket.created_at);
+        workspaceTitle.textContent = `Ticket #${data.ticket.id}`;
+        workspaceSubtitle.textContent = `${data.ticket.customer_name} · ${data.ticket.subject}`;
+        chatHeaderPill.textContent = data.ticket.customer_name;
+        setWorkspaceClosedState(status);
+        renderWorkspaceMessages(data.messages || []);
+        showChatStage("workspace");
+        setActiveView("chat");
+        scrollWorkspaceToBottom();
+        workspaceInput.dataset.ticketId = String(data.ticket.id);
       }
 
       function scrollWorkspaceToBottom() {
         workspaceMessages.scrollTop = workspaceMessages.scrollHeight;
       }
 
-      function appendWorkspaceUserMessage(text) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "message user";
-        wrapper.innerHTML = `<div class="bubble"></div>`;
-        wrapper.querySelector(".bubble").textContent = text;
-        workspaceMessages.appendChild(wrapper);
-      }
-
-      function appendWorkspaceAssistantMessage() {
-        const wrapper = document.createElement("div");
-        wrapper.className = "message assistant";
-        wrapper.innerHTML = `
-          <div class="bubble">
-            <div>This is a placeholder ticket response. Live ticket-specific RAG answers will appear here.</div>
-            <div class="pill-row">
-              <button
-                class="source-pill"
-                data-preview-name="refund_policy_2024.pdf"
-                data-preview-type="PDF"
-                data-preview-pages="12 pages"
-                data-preview-date="Jan 2024"
-              >
-                refund_policy_2024.pdf · p.3
-              </button>
-            </div>
-          </div>
-        `;
-        const pill = wrapper.querySelector(".source-pill");
-        pill.addEventListener("click", () => {
-          openPreview("refund_policy_2024.pdf", "PDF", "12 pages", "Jan 2024");
-        });
-        workspaceMessages.appendChild(wrapper);
-      }
-
-      function sendWorkspaceMessage() {
+      async function sendWorkspaceMessage() {
         const text = workspaceInput.value.trim();
-        if (!text) {
+        const ticketId = workspaceInput.dataset.ticketId;
+        if (!text || !ticketId) {
           return;
         }
 
-        appendWorkspaceUserMessage(text);
-        workspaceInput.value = "";
-        scrollWorkspaceToBottom();
+        const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/message`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: getSessionProfile().username,
+            role: "employee",
+            content: text,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          return;
+        }
 
-        window.setTimeout(() => {
-          appendWorkspaceAssistantMessage();
-          scrollWorkspaceToBottom();
-        }, 600);
+        workspaceInput.value = "";
+        await fetchTickets();
+        await openTicketChat(ticketId);
       }
 
       navItems.forEach((item) => {
@@ -1464,19 +1473,11 @@
         });
       });
 
-      ticketCards.forEach((card) => {
-        card.addEventListener("click", () => {
-          openTicketDetail(card);
-        });
-      });
+      fetchTickets();
 
-      historyCards.forEach((card) => {
-        card.addEventListener("click", () => {
-          openHistoryDetail(card);
-        });
+      workspaceAskButton.addEventListener("click", () => {
+        void sendWorkspaceMessage();
       });
-
-      workspaceAskButton.addEventListener("click", sendWorkspaceMessage);
       workspaceScrollButton.addEventListener("click", scrollWorkspaceToBottom);
       emptyChatAskButton.addEventListener("click", () => {
         emptyChatInput.focus();
@@ -1487,7 +1488,7 @@
       workspaceInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          sendWorkspaceMessage();
+          void sendWorkspaceMessage();
         }
       });
       emptyChatInput.addEventListener("keydown", (event) => {
@@ -1502,24 +1503,79 @@
       });
 
       ticketBackButton.addEventListener("click", () => {
-        ticketCards.forEach((card) => card.classList.remove("is-active"));
+        activeTicket = null;
+        deleteChatButton.disabled = true;
+        renderTickets(currentTickets);
         showTicketStage("list");
         showSidebarMode("history");
       });
 
       closeTicketButton.addEventListener("click", () => {
-        ticketCards.forEach((card) => card.classList.remove("is-active"));
-        historyCards.forEach((card) => card.classList.remove("is-active"));
-        activeTicket = null;
-        chatHeaderPill.textContent = "No ticket selected";
-        showChatStage("empty");
-        showSidebarMode("history");
+        if (!activeTicket) {
+          return;
+        }
+
+        void (async () => {
+          const response = await fetch(`${API_BASE_URL}/tickets/${activeTicket}/close`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: getSessionProfile().username,
+              role: "employee",
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+
+          await fetchTickets();
+          await openTicketChat(activeTicket);
+        })();
+      });
+
+      deleteChatButton.addEventListener("click", () => {
+        if (!activeTicket) {
+          return;
+        }
+
+        const confirmed = window.confirm(
+          "Delete this chat? This will permanently remove the ticket, chat history, and uploaded document records from the database."
+        );
+        if (!confirmed) {
+          return;
+        }
+
+        void (async () => {
+          const ticketId = activeTicket;
+          const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: getSessionProfile().username,
+              role: "employee",
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            return;
+          }
+
+          activeTicket = null;
+          workspaceInput.dataset.ticketId = "";
+          workspaceMessages.innerHTML = "";
+          chatHeaderPill.textContent = "No ticket selected";
+          await fetchTickets();
+          showChatStage("empty");
+          showSidebarMode("history");
+          setActiveView("chat");
+        })();
       });
 
       newChatButton.addEventListener("click", () => {
-        ticketCards.forEach((card) => card.classList.remove("is-active"));
-        historyCards.forEach((card) => card.classList.remove("is-active"));
         activeTicket = null;
+        deleteChatButton.disabled = true;
+        renderTickets(currentTickets);
         chatHeaderPill.textContent = "No ticket selected";
         emptyChatInput.value = "";
         showChatStage("empty");
