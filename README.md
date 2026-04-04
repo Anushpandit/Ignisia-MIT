@@ -1,285 +1,132 @@
 # Ignisia-MIT
 
-Problem Statement 1 : Multi-Format Knowledge Retrieval Agent for SME Operations.
+Problem Statement 1: Multi-Format Knowledge Retrieval Agent for SME Operations.
 
-Ignisia-MIT is a retrieval-focused MVP for teams that need to search across fragmented business knowledge stored in PDFs, emails, spreadsheets, text files, and scanned images. The project now includes the full local retrieval pipeline:
+Ignisia-MIT is a local-first RAG application for support and operations workflows. It ingests mixed business documents, embeds them into a customer-isolated ChromaDB store, and uses Groq to generate grounded answers with source context. On top of the retrieval pipeline, the project includes a working ticketing app with customer and employee dashboards, ticket chat, file uploads, email history, and a CRM support-ticket autofill agent.
 
-- document parsing
-- token-aware chunking
-- embedding generation
-- persistent vector storage with customer isolation
-- retrieval-augmented answer generation with Groq
-- source references and date-aware conflict handling
-- customer and employee ticket workflows backed by SQLite
-- ticket-scoped chat history in the app UI
-- evaluation utilities for replaying RAG questions against the sample corpus
+## What The Project Does
 
-## Problem
+This project is designed for teams that need to search and act on fragmented knowledge spread across:
 
-SME teams often lose time searching through documents scattered across inboxes, reports, spreadsheets, and image-based records. Even when the information exists, it is difficult to:
+- PDFs
+- text and markdown files
+- email files (`.eml`)
+- spreadsheets (`.csv`, `.xlsx`)
+- scanned or image-based documents
 
-- find the right file quickly
-- know which file a fact came from
-- compare older and newer documents when they disagree
-- avoid answering from outdated documents
+The app supports two main usage modes:
 
-This project is built to turn those scattered files into a retrieval-ready knowledge base that can answer questions with source context.
+- Customer support workflow:
+  customers create tickets, upload supporting files, and chat in a ticket thread
+- Internal retrieval workflow:
+  employees review tickets, ask retrieval-backed questions, inspect source references, and close tickets
 
-## Current Status
+The current build also includes a CRM support assistant page that can:
 
-### Working now
+- read recent ticket history
+- read email history already sent to a customer
+- retrieve relevant customer-uploaded document chunks
+- suggest issue summary, category, context, reasoning, and a draft resolution
+- close the selected ticket and write a resolution email into customer email history
+
+## Core Features
+
+### Retrieval pipeline
 
 - Multi-format parsing in [`parser.py`](parser.py)
 - Token-aware chunking in [`chunker.py`](chunker.py)
-- Embedding generation and ChromaDB storage in [`embedder.py`](embedder.py)
-- RAG answer generation with Groq in [`rag.py`](rag.py)
-- Retrieval confidence gate in [`rag.py`](rag.py)
-- Source attribution and conflict-aware answer formatting
-- Flask auth backend in [`backend/`](backend/)
-- Login/signup frontend in [`frontend/`](frontend/)
-- Customer ticket creation and chat UI in [`pages/customer.html`](pages/customer.html)
-- Employee dashboard UI in [`pages/employee.html`](pages/employee.html)
-- Ticket message storage and uploaded-file records in SQLite
-- Close-ticket and delete-chat flows in the employee dashboard
-- Eval replay script in [`eval_rag.py`](eval_rag.py)
-- Sample eval comparison notes in [`compare.md`](compare.md)
-- Unit tests for chunking and embedding logic in [`tests/unit/`](tests/unit)
-- Manual parsing/sample-output scripts in [`tests/manual_outputs/`](tests/manual_outputs)
-- End-to-end sample pipeline in [`test_cases/pipeline.py`](test_cases/pipeline.py)
+- Local embedding generation in [`embedder.py`](embedder.py)
+- Persistent ChromaDB storage in [`chroma_db/`](chroma_db)
+- Customer-isolated retrieval collections
+- Groq-backed answer generation in [`rag.py`](rag.py)
+- Source references with file/date context
+- Date-aware conflict handling and recency prioritization
 
-### Still limited / not finished
+### Application workflow
 
-- `.msg` parsing is not supported yet
-- legacy `.xls` parsing is not supported yet
-- conflict detection is heuristic and date-driven, not full semantic contradiction detection
-- Chroma embeddings are still stored per customer, not per ticket
-- deleting a chat currently removes SQLite ticket/message/file records, but not already-embedded Chroma vectors for that ticket
+- Authentication for `employee` and `customer` roles
+- Customer ticket creation with file upload support
+- Employee ticket review dashboard
+- Ticket-scoped chat history
+- Source attachment display in the app UI
+- Ticket close flow that writes a customer-facing email record
+- Ticket deletion flow for SQLite-backed chat/file cleanup
+- CRM support ticket autofill page in [`pages/crm_support_ticket_agent.html`](pages/crm_support_ticket_agent.html)
 
-## Architecture
+## Current UI Surfaces
 
-### Retrieval Pipeline
+- Login/signup screen: [`frontend/index.html`](frontend/index.html)
+- Customer dashboard: [`pages/customer.html`](pages/customer.html)
+- Employee dashboard: [`pages/employee.html`](pages/employee.html)
+- CRM support agent page: [`pages/crm_support_ticket_agent.html`](pages/crm_support_ticket_agent.html)
 
-```text
-Customer Uploads Files
-    |
-    v
-parser.py
-  - Detects file type
-  - Extracts text from PDFs, emails, spreadsheets, images, and text files
-  - Produces a normalized ParsedDocument
-    |
-    v
-chunker.py
-  - Splits documents into retrieval chunks
-  - Adds source-aware metadata
-  - Preserves customer isolation with customer_id
-    |
-    v
-embedder.py
-  - Converts chunks into vector embeddings
-  - Stores them in customer-specific ChromaDB collections
-  - Retrieves semantically similar chunks for a query
-    |
-    v
-rag.py
-  - Reorders results by recency
-  - Detects likely conflicts between sources
-  - Builds a constrained prompt
-  - Uses Groq to generate an answer with citations
-```
-
-### App Layer
+## End-To-End Architecture
 
 ```text
-Frontend (Login / Signup / Employee + Customer pages)
-    |
-    v
-Flask Backend
-    |
-    v
-SQLite Ticket + User Store
-    |
-    v
-ChromaDB + Groq-backed Retrieval
+Customer Files / Ticket Messages / Email History
+                    |
+                    v
+                parser.py
+                    |
+                    v
+                chunker.py
+                    |
+                    v
+               embedder.py
+                    |
+                    v
+        ChromaDB collections per customer
+                    |
+                    v
+                  rag.py
+                    |
+                    v
+       Flask API + SQLite app workflow layer
+                    |
+                    v
+   Frontend login + customer page + employee page + CRM page
 ```
 
-## LiteParser In Action
+## Retrieval Pipeline
 
-The parser uses LiteParse for PDF extraction and image OCR. The image below is included to visually show the LiteParse-based document parsing stage in the MVP workflow.
+### 1. Parsing
 
-![LiteParser demo](assets/liteparser-demo.webp)
+[`parser.py`](parser.py) normalizes raw files into a structured representation that the rest of the pipeline can process consistently.
 
-## Why These Technical Choices Were Made
-
-### Embedding Model
-
-This project uses the sentence-transformer model:
-
-`all-MiniLM-L6-v2`
-
-You can see this in [`embedder.py`](embedder.py):
-
-```python
-_embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-```
-
-#### Why this embedding model was used
-
-This model is a practical choice for an MVP because it balances:
-
-- good semantic search quality for short and medium text chunks
-- relatively small size compared to larger embedding models
-- fast local inference on a normal development machine
-- broad community adoption and easy integration through `sentence-transformers`
-
-For this project, those tradeoffs matter more than chasing the absolute best benchmark score. The retrieval system needs to:
-
-- embed many chunks quickly
-- support repeated local testing
-- work without depending on an external embedding API
-
-That makes `all-MiniLM-L6-v2` a strong fit for a hackathon/MVP setting.
-
-#### What it is doing in this project
-
-The model turns:
-
-- each stored chunk
-- and each incoming user question
-
-into dense numeric vectors. ChromaDB then compares those vectors and returns the chunks whose meaning is closest to the user’s question.
-
-So retrieval is based on semantic similarity, not exact keyword matching.
-
-### Vector Database
-
-This project uses:
-
-`ChromaDB`
-
-You can see this in [`embedder.py`](embedder.py):
-
-```python
-_chroma_client = chromadb.PersistentClient(path="./chroma_db")
-```
-
-#### Why ChromaDB was used
-
-ChromaDB is a strong choice here because it is:
-
-- simple to run locally
-- persistent on disk
-- easy to integrate into Python workflows
-- well suited for semantic search prototypes and internal tools
-- good for storing document text, metadata, ids, and embeddings together
-
-For this project, the important requirement was not distributed scale. It was:
-
-- fast local iteration
-- easy inspection during development
-- per-customer separation of knowledge
-- ability to store metadata alongside each chunk
-
-ChromaDB fits those needs well.
-
-#### How ChromaDB is used here
-
-Each customer gets a separate collection.
-
-Collection naming is handled in [`embedder.py`](embedder.py):
-
-```python
-def _collection_name(customer_id: str) -> str:
-    safe = customer_id.lower().strip().replace(" ", "_").replace("-", "_")
-    return f"customer_{safe}"
-```
-
-That means:
-
-- customer `001` becomes `customer_001`
-- customer `Acme Corp` becomes `customer_acme_corp`
-
-This is how retrieval stays customer-isolated.
-
-When `rag.py` asks a question for one customer, the system only queries that customer’s Chroma collection.
-
-### LLM / Answer Model
-
-The answer generation layer uses:
-
-- Groq API client
-- default model: `llama-3.3-70b-versatile`
-
-You can see this in [`rag.py`](rag.py):
-
-```python
-DEFAULT_MODEL = os.environ.get("RAG_MODEL", "llama-3.3-70b-versatile")
-```
-
-#### Why Groq was used
-
-Groq is used here for the answer generation stage because the project needs:
-
-- low-latency response generation
-- a straightforward API
-- support for modern chat-completions style prompting
-- a clean way to test RAG behavior with source-aware prompts
-
-The embedding stage is local, while the final answer generation is delegated to Groq.
-
-This split is useful because:
-
-- embeddings can be computed and stored locally
-- answer quality can still benefit from a capable hosted LLM
-
-## How The Pipeline Works
-
-### 1. Parsing with `parser.py`
-
-[`parser.py`](parser.py) reads raw input files and converts them into a normalized `ParsedDocument`.
-
-Supported types include:
+Supported inputs:
 
 - PDF
-- text / markdown
+- plain text
+- markdown
 - email (`.eml`)
-- spreadsheet (`.csv`, `.xlsx`)
-- image (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`)
+- CSV
+- XLSX
+- PNG / JPG / JPEG / GIF / WEBP
 
 The parser extracts:
 
-- full text
-- section structure
+- document text
+- sections and block structure
 - metadata such as filename and upload time
-- spreadsheet tables
-- email attachment information
+- email-related content
+- spreadsheet table content
+- OCR text from image-based inputs when applicable
 
-For PDFs and images, LiteParse is used for extraction/OCR.
+LiteParse is used for PDF parsing and OCR-oriented extraction. An example asset is shown below.
 
-### 2. Chunking with `chunker.py`
+![LiteParser demo](assets/liteparser-demo.webp)
 
-[`chunker.py`](chunker.py) turns each parsed document into smaller retrieval units called chunks.
+### 2. Chunking
 
-Important chunking settings:
+[`chunker.py`](chunker.py) splits parsed documents into smaller retrieval units.
+
+Current defaults:
 
 - chunk size: `512` tokens
 - overlap: `50` tokens
 - minimum chunk size: `50` tokens
 
-These values are defined in [`chunker.py`](chunker.py).
-
-#### Why chunking is needed
-
-Large documents are not searched as single giant blocks because:
-
-- retrieval quality usually improves with smaller semantic units
-- citations are easier to trace back
-- answers become more specific
-- vector search works better when chunks represent focused ideas
-
-#### Metadata added to each chunk
-
-Each chunk includes metadata such as:
+Important chunk metadata includes:
 
 - `customer_id`
 - `source_file`
@@ -289,223 +136,203 @@ Each chunk includes metadata such as:
 - `block_type`
 - `heading_context`
 
-This metadata is critical for:
+That metadata is later used for:
 
 - customer isolation
 - source attribution
-- conflict detection
-- page/section display in the UI
+- date-aware ranking
+- conflict handling
+- UI source previews
 
-### 3. Embedding and Storage with `embedder.py`
+### 3. Embedding And Storage
 
-[`embedder.py`](embedder.py) takes chunks and stores them in ChromaDB.
+[`embedder.py`](embedder.py) embeds chunks using:
 
-The flow is:
+`all-MiniLM-L6-v2`
 
-1. group chunks by customer
-2. create or open that customer’s Chroma collection
-3. encode the chunk text into embedding vectors
-4. upsert ids, embeddings, original text, and metadata into Chroma
+The vector store is:
 
-The stored records include:
+`ChromaDB`
+
+Each customer gets a separate Chroma collection. The collection name is derived from the customer id, which keeps retrieval isolated between customers.
+
+Stored records include:
 
 - deterministic chunk ids
-- raw chunk text as documents
-- dense vectors
-- metadata
+- raw chunk text
+- vector embeddings
+- chunk metadata
 
-This makes retrieval explainable, because the system can return not just matching text, but also its source file and context.
+### 4. Retrieval And Answer Generation
 
-### 4. Retrieval and Answer Generation with `rag.py`
+[`rag.py`](rag.py) handles:
 
-[`rag.py`](rag.py) is the orchestration layer for answering questions.
+- query embedding
+- Chroma similarity search
+- recency-based prioritization
+- conflict heuristics
+- prompt construction
+- Groq completion calls
+- structured answer packaging
 
-When you call `ask(customer_id, question)`:
+For customer support chat, the system uses retrieval plus conversation history. For the CRM autofill assistant, it uses recent ticket context, email history, and retrieved customer document chunks.
 
-1. it validates the inputs
-2. it queries Chroma for matching chunks using `query_collection(...)`
-3. it reorders those results by recency
-4. it detects likely conflicts across sources
-5. it builds a constrained prompt for Groq
-6. it returns a structured response with:
-   - answer text
-   - sources
-   - conflict information
-   - display-ready source summary
+## Source Priority And Conflict Handling
 
-`rag.py` also now includes a retrieval confidence threshold:
+This project does not perform full symbolic contradiction reasoning. It uses pragmatic heuristics based on source metadata.
 
-- `RETRIEVAL_CONFIDENCE_THRESHOLD = 0.75`
+Current behavior:
 
-If the best retrieved Chroma distance is above that threshold, the pipeline exits early and returns:
+- newer sources are prioritized over older ones
+- dates are resolved from `document_date` and then `uploaded_at`
+- recent emails can receive additional preference when ordering results
+- if multiple sources disagree, the system favors the more recent source and exposes the conflict context
 
-`I don't have enough information in your documents to answer this.`
+This logic lives in [`rag.py`](rag.py), mainly around recency prioritization and conflict detection.
 
-This behavior is useful for reducing unsupported answers, but it is currently very aggressive for the sample evaluation set and likely needs recalibration.
+Important limitation:
 
-## How Retrieval Works
+- this behavior is only as reliable as the date metadata extracted from the source files
 
-Retrieval is semantic, not keyword-only.
+## CRM Support Agent
 
-When a question comes in:
+The CRM support page in [`pages/crm_support_ticket_agent.html`](pages/crm_support_ticket_agent.html) is a structured support triage interface layered on top of the retrieval system.
 
-1. the question is embedded using the same `all-MiniLM-L6-v2` model
-2. ChromaDB searches for the nearest chunk vectors in that customer’s collection
-3. the top `n_results` are returned
+It currently does the following:
 
-That means the system can still find relevant chunks even if the wording in the question is different from the wording in the document.
+- shows customer profile details
+- shows customer-uploaded files
+- shows email history sent to that customer
+- lets an employee run an AI autofill flow for an open ticket
+- fills:
+  - category
+  - issue summary
+  - relevant context
+  - reasoning
+  - suggested resolution
+- shows the retrieved source cards used by the agent
+- submits by closing the selected ticket through the backend
+- after close, the app records a resolution email in customer mail history
 
-## Conflict Detection Strategy
+Important current behavior:
 
-This project includes a practical conflict-handling layer in [`rag.py`](rag.py).
+- the CRM autofill flow no longer depends on the shared company-policy collection
+- it works from ticket history, email history, and customer document retrieval
 
-It does not try to fully prove contradiction using symbolic reasoning. Instead, it uses source metadata and recency rules.
+## Ticketing And Email Workflow
 
-### Current logic
+The app includes a SQLite-backed ticket system implemented across [`backend/app.py`](backend/app.py) and [`backend/database.py`](backend/database.py).
 
-- retrieved chunks are grouped by source file
-- the system resolves a date for each source using:
-  - `document_date`
-  - or `uploaded_at`
-- the most recent source is treated as more trustworthy
-- recent emails are given extra weight over older policy documents or spreadsheets
+### Customer-side workflow
 
-If multiple sources appear to disagree, the final prompt tells the LLM to:
+- customers can sign up and log in
+- customers can create tickets
+- ticket creation supports message text and file uploads
+- ticket conversations are stored in SQLite
 
-- acknowledge the conflict explicitly
-- identify which source is trusted
-- explain why
-- cite both the trusted and conflicting evidence
+### Employee-side workflow
 
-This is useful for real business workflows because many document disagreements are temporal rather than purely logical.
+- employees can browse customer tickets
+- employees can ask questions in a ticket thread
+- the backend runs retrieval-augmented responses
+- responses can include source attachments for document inspection
 
-Example:
+### Ticket close behavior
 
-- old PDF says `14 days`
-- newer email says `30 days`
+Closing a ticket currently:
 
-The system should not silently pick one. It should explain the difference and prefer the newer source.
+- updates the ticket status to `Closed`
+- creates a customer mail entry in the SQLite mail table
+- makes that email visible in customer and CRM email history views
 
-## RAG Prompt Design
+The existing close route is:
 
-The prompt in [`rag.py`](rag.py) is intentionally constrained.
+- `POST /tickets/<ticket_id>/close`
 
-It instructs the model to:
+### Delete chat behavior
 
-- answer only from the provided context
-- avoid making things up
-- cite sources as `[DOC-N]`
-- mention dates
-- explicitly handle conflicts
-- explain why the trusted source was chosen
+Deleting a ticket chat currently removes:
 
-This improves reliability and makes debugging easier, because the generated answer is tied directly to retrieved source chunks.
+- the ticket record
+- ticket messages
+- uploaded-file records for that ticket
+- uploaded files from disk for that ticket
 
-## ChromaDB Folder Structure
+Important limitation:
 
-The local vector store is persisted in:
+- already embedded Chroma vectors for those documents are not deleted yet
+- embeddings are still stored at customer scope, not ticket scope
 
-[`chroma_db/`](chroma_db)
+## Project Structure
 
-It generally contains:
-
-- `chroma.sqlite3`
-- one or more UUID-named index directories
-
-In simple terms:
-
-- the SQLite file stores metadata and collection state
-- the UUID folders store the low-level vector index files used for nearest-neighbor search
-
-This folder is ignored in git because it is generated runtime state, not source code.
+```text
+assets/                README assets
+backend/               Flask app, auth helpers, SQLite logic, runtime data
+frontend/              Login/signup frontend assets
+pages/                 Customer, employee, and CRM HTML pages
+test_cases/            End-to-end sample pipeline
+tests/unit/            Unit tests
+tests/manual_outputs/  Manual parser output scripts
+chunker.py             Chunking logic
+embedder.py            Embedding and Chroma retrieval layer
+parser.py              Multi-format parser
+rag.py                 Retrieval orchestration and Groq integration
+```
 
 ## Supported File Types
 
 | File Type | Status | Notes |
 | --- | --- | --- |
 | PDF | Supported | Parsed with LiteParse |
-| Text / Markdown | Supported | Blank-line sectioning |
-| Email (`.eml`) | Supported | Body extraction plus attachment metadata |
-| Spreadsheet (`.csv`) | Supported | CSV rows normalized into structured tables |
+| Text / Markdown | Supported | Sectioned into retrieval blocks |
+| Email (`.eml`) | Supported | Email body plus metadata |
+| Spreadsheet (`.csv`) | Supported | Parsed into normalized rows |
 | Spreadsheet (`.xlsx`) | Supported | Parsed with `openpyxl` |
-| Image (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`) | Supported | OCR path available through LiteParse |
+| Image (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`) | Supported | OCR/extraction path available |
 | Outlook `.msg` | Not yet supported | Use `.eml` for now |
 | Legacy `.xls` | Not yet supported | Use `.csv` or `.xlsx` |
 
-## Project Structure
+## Why These Technical Choices Were Used
 
-```text
-backend/               Flask auth API, SQLite auth storage, bcrypt helpers
-frontend/              Login/signup frontend in TypeScript + compiled JS
-pages/                 Customer and employee dashboard pages
-examples/              Sample source documents
-data/                  Sample parsed markdown and chunk outputs
-assets/                README assets
-tests/unit/            Unit tests for chunking and embedding
-tests/manual_outputs/  Manual parsing / output-generation scripts
-test_cases/            End-to-end sample pipeline for customer 001
-parser.py              Multi-format parser
-chunker.py             Chunking layer
-embedder.py            Embedding + ChromaDB storage/retrieval
-rag.py                 Groq-backed retrieval answer layer
-```
+### `all-MiniLM-L6-v2`
 
-## Example Outputs
+This embedding model is a practical fit for an MVP because it is:
 
-### Parsed markdown outputs
+- lightweight enough for local development
+- fast enough for repeated testing
+- strong enough for general semantic retrieval
+- easy to integrate through `sentence-transformers`
 
-- [`data/sample-report.md`](data/sample-report.md)
-- [`data/sample-email.md`](data/sample-email.md)
-- [`data/sample-ocr-image.md`](data/sample-ocr-image.md)
+### ChromaDB
 
-### Chunk outputs
+ChromaDB is used because it is:
 
-- [`data/sample-report-chunks.json`](data/sample-report-chunks.json)
-- [`data/sample-email-chunks.json`](data/sample-email-chunks.json)
-- [`data/sample-ocr-image-chunks.json`](data/sample-ocr-image-chunks.json)
+- local and simple to run
+- persistent on disk
+- easy to inspect during development
+- a good fit for document + metadata + embedding storage
 
-## Authentication Module
+### Groq
 
-The project includes auth plus a ticketing workflow for customer and employee roles:
+Groq is used for the answer-generation layer because it gives:
 
-- signup and login UI in [`frontend/`](frontend/)
-- Flask API in [`backend/app.py`](backend/app.py)
-- SQLite persistence in [`backend/database.py`](backend/database.py)
-- bcrypt password hashing in [`backend/auth.py`](backend/auth.py)
-- customer ticket creation with file uploads
-- employee ticket review with chat history
-- ticket close action
-- employee-side delete-chat action
-
-Successful logins redirect users to role-specific pages in [`pages/`](pages/).
-
-### Delete Chat Behavior
-
-The employee dashboard includes a red `Delete chat` button next to `Close ticket`.
-
-When used, it removes the selected ticket from SQLite by deleting:
-
-- the `tickets` row
-- all `ticket_messages` rows for that ticket
-- all `uploaded_files` rows for that ticket
-
-Important limitation:
-
-- this does not yet remove any already-embedded document chunks from ChromaDB
-- embeddings are stored by `customer_id`, not `ticket_id`
-- because of that, the app does not yet know which stored vectors came from one exact ticket
+- low-latency inference
+- a simple chat completion API
+- a clean separation between local embeddings and hosted generation
 
 ## Setup
 
 ### 1. Install dependencies
 
+This project uses `uv`.
+
 ```bash
 uv sync
 ```
 
-### 2. Add environment variables
+### 2. Configure environment variables
 
-Create a `.env` file in the project root with at least:
+Create a root `.env` file with:
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
@@ -517,7 +344,7 @@ Optional:
 RAG_MODEL=llama-3.3-70b-versatile
 ```
 
-`rag.py` loads `.env` automatically using `python-dotenv`.
+`rag.py` loads `.env` automatically through `python-dotenv`.
 
 ### 3. Start the backend
 
@@ -525,7 +352,11 @@ RAG_MODEL=llama-3.3-70b-versatile
 uv run python backend/app.py
 ```
 
-### 4. Serve the frontend
+The backend listens on:
+
+`http://localhost:5000`
+
+### 4. Serve the frontend pages
 
 ```bash
 uv run python -m http.server 5500
@@ -533,47 +364,46 @@ uv run python -m http.server 5500
 
 Open:
 
-```text
-http://127.0.0.1:5500/frontend/index.html
-```
+- Login app: `http://127.0.0.1:5500/frontend/index.html`
+- Customer dashboard: `http://127.0.0.1:5500/pages/customer.html`
+- Employee dashboard: `http://127.0.0.1:5500/pages/employee.html`
+- CRM page: `http://127.0.0.1:5500/pages/crm_support_ticket_agent.html`
 
-## Running The Retrieval Pipeline
+Important note:
 
-### Run the sample end-to-end pipeline
+- this is a static HTML/JS setup, not a Vite or Next.js dev server
+- refresh the browser after frontend edits
+
+## Running The Sample Retrieval Pipeline
 
 ```bash
 uv run python test_cases/pipeline.py
 ```
 
-This script:
+This script demonstrates:
 
-- creates a small mock corpus for customer `001`
-- parses the documents
-- chunks them
-- embeds and stores them in ChromaDB
-- lets you ask interactive questions
-- shows retrieved chunks and the final Groq answer
+- parsing
+- chunking
+- embedding
+- storing into Chroma
+- asking interactive questions
 
-## Running The Sample Evaluation
-
-The repo now includes an eval replay script for the sample PDF:
+## Running Evaluation
 
 ```bash
 uv run python eval_rag.py
 ```
 
-This script:
+This evaluation flow:
 
-- uses the existing Chroma collection for customer `rag-eval-sample-report`
-- replays the 27 questions listed in [`compare.md`](compare.md)
-- calls the current `rag.py`
-- records best retrieval distances and whether the confidence gate fired
-- writes structured results to [`rag_eval_results.json`](rag_eval_results.json)
+- replays the sample questions listed in [`compare.md`](compare.md)
+- uses the current `rag.py` behavior
+- records raw results in `rag_eval_results.json`
 
 Related files:
 
-- [`compare.md`](compare.md): human-readable evaluation notes and before/after summaries
-- [`rag_eval_results.json`](rag_eval_results.json): raw machine-readable replay output
+- [`compare.md`](compare.md)
+- `rag_eval_results.json`
 
 ## Running Tests
 
@@ -583,7 +413,7 @@ Related files:
 uv run python -m unittest tests.unit.test_chunker tests.unit.test_embedder
 ```
 
-### Manual parsing sample scripts
+### Manual parser-output scripts
 
 ```bash
 uv run python tests/manual_outputs/test_save_email_output.py
@@ -591,21 +421,73 @@ uv run python tests/manual_outputs/test_save_image_output.py
 uv run python tests/manual_outputs/test_save_pdf_output.py
 ```
 
+## API Overview
+
+The backend in [`backend/app.py`](backend/app.py) includes routes for:
+
+- signup and login
+- profile lookup
+- customer listing
+- ticket listing and retrieval
+- ticket message posting
+- file access for uploaded ticket files
+- customer mail history
+- ticket close
+- ticket delete
+- CRM autofill
+
+Representative routes:
+
+- `POST /signup`
+- `POST /login`
+- `GET /customers`
+- `GET /tickets`
+- `GET /tickets/<ticket_id>/messages`
+- `POST /tickets/<ticket_id>/messages`
+- `GET /customer-files`
+- `GET /mail`
+- `POST /tickets/<ticket_id>/close`
+- `POST /tickets/<ticket_id>/delete`
+- `POST /crm/autofill`
+
+## Current Status
+
+### Working now
+
+- multi-format retrieval pipeline
+- customer-isolated vector search
+- source-aware Groq responses
+- customer and employee authentication
+- ticket creation with file uploads
+- ticket chat with retrieval-backed assistant responses
+- email history tracking for resolved tickets
+- employee dashboard with close/delete flows
+- CRM support agent autofill flow
+
+### Still limited
+
+- `.msg` parsing is not implemented
+- `.xls` parsing is not implemented
+- conflict detection is heuristic, not semantic reasoning
+- retrieval confidence tuning still needs calibration
+- Chroma cleanup on ticket deletion is incomplete
+- embeddings are still customer-scoped, not ticket-scoped
+- frontend is static HTML/JS without hot reload tooling
+
 ## Known Limitations
 
-- conflict detection is based on recency heuristics, not full contradiction reasoning
-- `.msg` email parsing is not implemented
-- `.xls` spreadsheet parsing is not implemented
-- duplicate chunk-id edge cases can still matter if chunk metadata is not unique enough
-- the retrieval confidence threshold in [`rag.py`](rag.py) is not calibrated yet for the current Chroma distance distribution
-- ticket deletion removes SQLite records but does not yet remove Chroma vectors for those uploaded documents
-- vector storage is customer-scoped, so safe per-ticket embedding deletion needs additional metadata such as `ticket_id`
+- Date extraction quality strongly affects recency-based source prioritization.
+- Deleting a ticket does not currently delete already-embedded document vectors for that ticket.
+- CRM autofill is support-oriented and heuristic; it does not enforce a formal business-rules engine.
+- Generated responses depend on Groq availability and valid API credentials.
+- The project is optimized for local MVP iteration, not production deployment hardening.
 
 ## Roadmap
 
-- calibrate or redesign the retrieval confidence gate
-- add ticket-aware embedding metadata so delete-chat can also remove Chroma vectors safely
-- improve conflict detection beyond date heuristics
-- expand test coverage for `rag.py`
-- support additional enterprise document formats
-- add observability around retrieval quality and source usage
+- add ticket-aware vector metadata for safe deletion
+- improve conflict handling beyond date heuristics
+- add broader automated coverage for `rag.py` and app flows
+- support more enterprise document formats
+- improve observability for retrieval quality and source usage
+- refine CRM autofill outputs and action handling
+
