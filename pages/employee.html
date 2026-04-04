@@ -41,6 +41,7 @@
 
       body {
         margin: 0;
+        padding: 16px;
         overflow: hidden;
         background: var(--bg);
         color: var(--text);
@@ -54,9 +55,30 @@
       }
 
       .dashboard {
-        height: 100vh;
+        height: calc(100vh - 32px);
         display: grid;
         grid-template-columns: 220px 1fr 300px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        background: var(--panel);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+      }
+
+      .dashboard.customers-mode {
+        grid-template-columns: 220px 1fr;
+      }
+
+      .dashboard.customers-mode .right-sidebar {
+        display: none;
+      }
+
+      .dashboard.sidebar-hidden {
+        grid-template-columns: 220px 1fr;
+      }
+
+      .dashboard.sidebar-hidden .right-sidebar {
+        display: none;
       }
 
       .left-sidebar,
@@ -178,6 +200,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        background: var(--bg);
       }
 
       .view {
@@ -189,6 +212,14 @@
       .view.is-active {
         display: flex;
         flex-direction: column;
+      }
+
+      .view-embed {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        border: 0;
+        background: var(--bg);
       }
 
       .main-header {
@@ -297,6 +328,192 @@
         padding: 4px 8px;
         font-size: 12px;
         cursor: pointer;
+      }
+
+      .source-reference-panel {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .source-reference-chip {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--text);
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .document-viewer {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 20;
+      }
+
+      .document-viewer.is-open {
+        display: flex;
+      }
+
+      .confirm-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, 0.48);
+        z-index: 30;
+      }
+
+      .confirm-modal.is-open {
+        display: flex;
+      }
+
+      .confirm-modal-card {
+        width: min(460px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+        padding: 22px;
+      }
+
+      .confirm-modal-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .confirm-modal-body {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .confirm-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .document-viewer-shell {
+        width: min(1120px, 100%);
+        height: min(760px, 100%);
+        display: grid;
+        grid-template-columns: 1.4fr 0.9fr;
+        background: var(--panel);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+      }
+
+      .document-viewer-preview {
+        border-right: 1px solid var(--border);
+        background: #e5e7eb;
+        min-height: 0;
+      }
+
+      .document-viewer-frame {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #ffffff;
+      }
+
+      .document-viewer-fallback {
+        height: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        white-space: pre-line;
+      }
+
+      .document-viewer-fallback.is-visible {
+        display: flex;
+      }
+
+      .document-viewer-meta {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+      }
+
+      .document-viewer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .document-viewer-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .document-viewer-close {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #ffffff;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .document-viewer-body {
+        padding: 18px 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .viewer-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .viewer-meta-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #f8fafc;
+      }
+
+      .viewer-meta-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .viewer-meta-value {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-word;
+      }
+
+      .viewer-excerpt {
+        border: 1px solid var(--warning-border);
+        border-radius: 10px;
+        background: #fffbeb;
+        padding: 14px;
+        line-height: 1.7;
+        white-space: pre-line;
       }
 
       .chat-input-bar {
@@ -803,8 +1020,16 @@
       }
 
       @media (max-width: 1100px) {
+        body {
+          padding: 0;
+        }
+
         .dashboard {
+          height: 100vh;
           grid-template-columns: 220px 1fr;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
         }
 
         .right-sidebar {
@@ -824,6 +1049,7 @@
 
         <nav class="nav" aria-label="Employee navigation">
           <button class="nav-item is-active" data-view="chat">Chat</button>
+          <button class="nav-item" data-view="customers">Customers</button>
           <button class="nav-item" data-view="tickets">Tickets</button>
           <button class="nav-item" data-view="settings">Settings</button>
         </nav>
@@ -845,13 +1071,6 @@
           <div class="chat-stage is-active" data-chat-stage="empty">
             <div class="chat-empty">
               <div class="chat-empty-text">Let's Close Some Tickets</div>
-              <div class="chat-empty-shell">
-                <div class="chat-input-shell">
-                  <button class="icon-button" id="emptyChatScrollButton" aria-label="Scroll empty chat">↓</button>
-                  <input class="chat-input" id="emptyChatInput" type="text" placeholder="Ask about this ticket" />
-                  <button class="ask-button" id="emptyChatAskButton">Ask</button>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -925,6 +1144,15 @@
             </div>
           </div>
 
+        </section>
+
+        <section class="view" data-view-panel="customers">
+          <iframe
+            class="view-embed"
+            id="customersFrame"
+            src="/pages/crm_support_ticket_agent.html"
+            title="Customers"
+          ></iframe>
         </section>
 
         <section class="view" data-view-panel="settings">
@@ -1091,9 +1319,66 @@
       </aside>
     </div>
 
+    <div class="document-viewer" id="documentViewer">
+      <div class="document-viewer-shell">
+        <div class="document-viewer-preview">
+          <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+          <div class="document-viewer-fallback" id="documentViewerFallback"></div>
+        </div>
+        <div class="document-viewer-meta">
+          <div class="document-viewer-header">
+            <div class="document-viewer-title" id="documentViewerTitle">Document viewer</div>
+            <button class="document-viewer-close" id="documentViewerClose" type="button">Close</button>
+          </div>
+          <div class="document-viewer-body">
+            <div class="viewer-meta-grid">
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Page</div>
+                <div class="viewer-meta-value" id="documentViewerPage">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Index</div>
+                <div class="viewer-meta-value" id="documentViewerIndex">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Section</div>
+                <div class="viewer-meta-value" id="documentViewerSection">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Date</div>
+                <div class="viewer-meta-value" id="documentViewerDate">n/a</div>
+              </div>
+            </div>
+            <div>
+              <div class="viewer-meta-label">Reference</div>
+              <div class="viewer-meta-value" id="documentViewerReference">n/a</div>
+            </div>
+            <div>
+              <div class="viewer-meta-label">Retrieved Chunk</div>
+              <div class="viewer-excerpt" id="documentViewerExcerpt">No excerpt available.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-modal" id="deleteConfirmModal" aria-hidden="true">
+      <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+        <div class="confirm-modal-title" id="deleteConfirmTitle">Delete this chat?</div>
+        <div class="confirm-modal-body">
+          This will permanently remove the ticket, chat history, and uploaded document records from the database.
+        </div>
+        <div class="confirm-modal-actions">
+          <button class="secondary-button" id="deleteConfirmCancelButton" type="button">Cancel</button>
+          <button class="danger-button" id="deleteConfirmProceedButton" type="button">Delete chat</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const SESSION_STORAGE_KEY = "knowledgeAgentSession";
       const API_BASE_URL = "http://localhost:5000";
+      const dashboard = document.querySelector(".dashboard");
       const navItems = document.querySelectorAll(".nav-item");
       const views = document.querySelectorAll("[data-view-panel]");
       const chatStages = document.querySelectorAll("[data-chat-stage]");
@@ -1104,9 +1389,6 @@
       const settingsLogoutButton = document.getElementById("settingsLogoutButton");
       const profileEmployeeIdValue = document.getElementById("profileEmployeeIdValue");
       const chatHeaderPill = document.getElementById("chatHeaderPill");
-      const emptyChatInput = document.getElementById("emptyChatInput");
-      const emptyChatAskButton = document.getElementById("emptyChatAskButton");
-      const emptyChatScrollButton = document.getElementById("emptyChatScrollButton");
       const profileNameValue = document.getElementById("profileNameValue");
       const profileEmailValue = document.getElementById("profileEmailValue");
       const ticketStages = document.querySelectorAll("[data-ticket-stage]");
@@ -1128,6 +1410,20 @@
       const previewType = document.getElementById("previewType");
       const previewPages = document.getElementById("previewPages");
       const previewDate = document.getElementById("previewDate");
+      const documentViewer = document.getElementById("documentViewer");
+      const documentViewerFrame = document.getElementById("documentViewerFrame");
+      const documentViewerFallback = document.getElementById("documentViewerFallback");
+      const documentViewerTitle = document.getElementById("documentViewerTitle");
+      const documentViewerPage = document.getElementById("documentViewerPage");
+      const documentViewerIndex = document.getElementById("documentViewerIndex");
+      const documentViewerSection = document.getElementById("documentViewerSection");
+      const documentViewerDate = document.getElementById("documentViewerDate");
+      const documentViewerReference = document.getElementById("documentViewerReference");
+      const documentViewerExcerpt = document.getElementById("documentViewerExcerpt");
+      const documentViewerClose = document.getElementById("documentViewerClose");
+      const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+      const deleteConfirmCancelButton = document.getElementById("deleteConfirmCancelButton");
+      const deleteConfirmProceedButton = document.getElementById("deleteConfirmProceedButton");
 
       const ticketTitle = document.getElementById("ticketTitle");
       const ticketCustomer = document.getElementById("ticketCustomer");
@@ -1239,6 +1535,25 @@
         }).format(date);
       }
 
+      function formatDateTimeLabel(value) {
+        if (!value) {
+          return "n/a";
+        }
+        const normalized = String(value).replace(" ", "T");
+        const date = new Date(normalized);
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).format(date);
+      }
+
       function badgeClass(status) {
         if (status === "Pending") {
           return "badge-pending";
@@ -1267,6 +1582,9 @@
           view.classList.toggle("is-active", view.dataset.viewPanel === viewName);
         });
 
+        dashboard.classList.toggle("customers-mode", viewName === "customers");
+        dashboard.classList.toggle("sidebar-hidden", viewName !== "chat");
+
         if (viewName === "chat") {
           showSidebarMode("history");
           if (!activeTicket) {
@@ -1276,7 +1594,6 @@
 
         if (viewName === "tickets") {
           showTicketStage("list");
-          showSidebarMode("history");
         }
       }
 
@@ -1388,13 +1705,140 @@
           const wrapper = document.createElement("div");
           wrapper.className = `message ${message.role}`;
           wrapper.innerHTML = `<div class="bubble"></div>`;
-          let text = message.content || "";
-          if (Array.isArray(message.attachments) && message.attachments.length > 0) {
-            text += `\n\nAttachments: ${message.attachments.join(", ")}`;
+          const text = message.content || "";
+          const bubble = wrapper.querySelector(".bubble");
+          if (message.role === "assistant") {
+            bubble.innerHTML = formatAssistantMessage(text);
+            const sourceAttachments = Array.isArray(message.attachments)
+              ? message.attachments.filter((item) => item && typeof item === "object" && item.kind === "source_reference")
+              : [];
+            if (sourceAttachments.length > 0) {
+              wrapper.appendChild(buildSourceReferencePanel(sourceAttachments));
+            }
+          } else {
+            bubble.textContent = text;
           }
-          wrapper.querySelector(".bubble").textContent = text;
           workspaceMessages.appendChild(wrapper);
         });
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function formatAssistantMessage(text) {
+        const withoutReferences = String(text || "").replace(/\n?References:\s*[^\n]*/i, "");
+        const escaped = escapeHtml(withoutReferences.trim());
+        const withBoldLabels = escaped.replace(
+          /(^|\n)(Answer:|Conflicts:)/g,
+          (_match, prefix, label) => `${prefix}<strong>${label}</strong>`
+        );
+        return withBoldLabels.replace(/\n/g, "<br>");
+      }
+
+      function buildSourceReferencePanel(sources) {
+        const panel = document.createElement("div");
+        panel.className = "source-reference-panel";
+        sources.forEach((source) => {
+          const chip = document.createElement("button");
+          chip.className = "source-reference-chip";
+          chip.type = "button";
+          chip.textContent = `${source.source_file} (page ${source.page ?? "n/a"}, index ${source.index ?? "n/a"})`;
+          chip.addEventListener("click", () => {
+            openDocumentViewer(source);
+          });
+          panel.appendChild(chip);
+        });
+        return panel;
+      }
+
+      function openDocumentViewer(source) {
+        const pageValue = source.page ?? "n/a";
+        const indexValue = source.index ?? "n/a";
+        documentViewerTitle.textContent = source.source_file || "Document viewer";
+        documentViewerPage.textContent = String(pageValue);
+        documentViewerIndex.textContent = String(indexValue);
+        documentViewerSection.textContent = source.heading_context || "n/a";
+        documentViewerDate.textContent = formatDateTimeLabel(source.document_date || source.uploaded_at || "");
+        documentViewerReference.textContent = `${source.source_file} (page ${pageValue}, index ${indexValue})`;
+        documentViewerExcerpt.textContent = source.text_excerpt || "No excerpt available.";
+
+        const fileType = String(source.file_type || "").toLowerCase();
+        const fileUrl = String(source.file_url || "");
+        const pageNumber = Number.parseInt(String(source.page ?? ""), 10);
+        if (fileUrl && fileType === "pdf") {
+          const pageSuffix = Number.isFinite(pageNumber) ? `#page=${pageNumber}` : "";
+          documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
+          documentViewerFrame.style.display = "block";
+          documentViewerFallback.classList.remove("is-visible");
+          documentViewerFallback.textContent = "";
+        } else {
+          documentViewerFrame.removeAttribute("src");
+          documentViewerFrame.style.display = "none";
+          documentViewerFallback.classList.add("is-visible");
+          documentViewerFallback.textContent = fileUrl
+            ? "Preview is only available for stored PDF files right now.\nUse the metadata on the right to inspect this source."
+            : "This source file is not currently available on disk for preview.\nThe retrieved chunk and metadata are still shown on the right.";
+        }
+
+        documentViewer.classList.add("is-open");
+      }
+
+      function closeDocumentViewer() {
+        documentViewer.classList.remove("is-open");
+        documentViewerFrame.removeAttribute("src");
+        documentViewerFallback.classList.remove("is-visible");
+        documentViewerFallback.textContent = "";
+      }
+
+      function openDeleteConfirmModal() {
+        deleteConfirmModal.classList.add("is-open");
+        deleteConfirmModal.setAttribute("aria-hidden", "false");
+        deleteConfirmProceedButton.focus();
+      }
+
+      function closeDeleteConfirmModal() {
+        deleteConfirmModal.classList.remove("is-open");
+        deleteConfirmModal.setAttribute("aria-hidden", "true");
+      }
+
+      async function deleteActiveTicket() {
+        if (!activeTicket) {
+          return;
+        }
+
+        const ticketId = activeTicket;
+        try {
+          const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: getSessionProfile().username,
+              role: "employee",
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            window.alert(data.message || "Unable to delete this chat right now.");
+            return;
+          }
+
+          activeTicket = null;
+          closeDeleteConfirmModal();
+          workspaceInput.dataset.ticketId = "";
+          workspaceMessages.innerHTML = "";
+          chatHeaderPill.textContent = "No ticket selected";
+          deleteChatButton.disabled = true;
+          await fetchTickets();
+          showChatStage("empty");
+          showSidebarMode("history");
+          setActiveView("chat");
+        } catch (_error) {
+          window.alert("Unable to delete this chat right now.");
+        }
       }
 
       async function openTicketChat(ticketId) {
@@ -1479,31 +1923,26 @@
         void sendWorkspaceMessage();
       });
       workspaceScrollButton.addEventListener("click", scrollWorkspaceToBottom);
-      emptyChatAskButton.addEventListener("click", () => {
-        emptyChatInput.focus();
-      });
-      emptyChatScrollButton.addEventListener("click", () => {
-        emptyChatInput.focus();
-      });
       workspaceInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
           void sendWorkspaceMessage();
         }
       });
-      emptyChatInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          emptyChatInput.blur();
-        }
-      });
 
       previewBackButton.addEventListener("click", () => {
         showSidebarMode(previousSidebarMode === "preview" ? "history" : previousSidebarMode);
       });
+      documentViewerClose.addEventListener("click", closeDocumentViewer);
+      documentViewer.addEventListener("click", (event) => {
+        if (event.target === documentViewer) {
+          closeDocumentViewer();
+        }
+      });
 
       ticketBackButton.addEventListener("click", () => {
         activeTicket = null;
+        closeDeleteConfirmModal();
         deleteChatButton.disabled = true;
         renderTickets(currentTickets);
         showTicketStage("list");
@@ -1538,50 +1977,39 @@
         if (!activeTicket) {
           return;
         }
+        openDeleteConfirmModal();
+      });
 
-        const confirmed = window.confirm(
-          "Delete this chat? This will permanently remove the ticket, chat history, and uploaded document records from the database."
-        );
-        if (!confirmed) {
-          return;
+      deleteConfirmCancelButton.addEventListener("click", () => {
+        closeDeleteConfirmModal();
+      });
+
+      deleteConfirmProceedButton.addEventListener("click", () => {
+        closeDeleteConfirmModal();
+        void deleteActiveTicket();
+      });
+
+      deleteConfirmModal.addEventListener("click", (event) => {
+        if (event.target === deleteConfirmModal) {
+          closeDeleteConfirmModal();
         }
+      });
 
-        void (async () => {
-          const ticketId = activeTicket;
-          const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/delete`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: getSessionProfile().username,
-              role: "employee",
-            }),
-          });
-          const data = await response.json();
-          if (!response.ok || !data.success) {
-            return;
-          }
-
-          activeTicket = null;
-          workspaceInput.dataset.ticketId = "";
-          workspaceMessages.innerHTML = "";
-          chatHeaderPill.textContent = "No ticket selected";
-          await fetchTickets();
-          showChatStage("empty");
-          showSidebarMode("history");
-          setActiveView("chat");
-        })();
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && deleteConfirmModal.classList.contains("is-open")) {
+          closeDeleteConfirmModal();
+        }
       });
 
       newChatButton.addEventListener("click", () => {
         activeTicket = null;
+        closeDeleteConfirmModal();
         deleteChatButton.disabled = true;
         renderTickets(currentTickets);
         chatHeaderPill.textContent = "No ticket selected";
-        emptyChatInput.value = "";
         showChatStage("empty");
         showSidebarMode("history");
         setActiveView("chat");
-        emptyChatInput.focus();
       });
 
       logoutButton.addEventListener("click", () => {

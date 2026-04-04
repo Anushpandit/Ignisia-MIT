@@ -372,6 +372,7 @@ def _build_metadata(
     )
     metadata: dict[str, Any] = {
         "customer_id": customer_id,
+        "scope": "customer",
         "source_file": _source_file(doc),
         "source_type": str(getattr(doc, "file_type", "")),
         "document_date": document_date,

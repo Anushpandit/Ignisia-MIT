@@ -1,0 +1,1239 @@
+
+<style>
+:root {
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-background-app: #f5f5f5;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-background-info: #eef4ff;
+  --color-border-primary: #1a1a1a;
+  --color-border-secondary: #d1d5db;
+  --color-border-tertiary: #e5e7eb;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #94a3b8;
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.07);
+  --shadow-card: 0 8px 22px rgba(15, 23, 42, 0.05);
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-app);
+  color: var(--color-text-primary);
+  padding: 20px;
+  line-height: 1.5;
+}
+.crm-shell {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  min-height: calc(100vh - 40px);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  background: var(--color-background-primary);
+  box-shadow: var(--shadow-soft);
+}
+.sidebar {
+  background: var(--color-background-primary);
+  border-right: 1px solid var(--color-border-tertiary);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sidebar-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+.search-box { position: relative; }
+.search-box input {
+  width: 100%;
+  padding: 11px 12px 11px 34px;
+  font-size: 14px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  outline: none;
+}
+.search-box input:focus {
+  border-color: var(--color-border-primary);
+  background: var(--color-background-primary);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+}
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--color-text-tertiary); }
+.client-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; padding-right: 2px; }
+.client-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  border: 1px solid transparent;
+}
+.client-item:hover {
+  background: var(--color-background-secondary);
+  border-color: var(--color-border-tertiary);
+}
+.client-item.active {
+  background: var(--color-background-info);
+  border-color: #bfd4fb;
+}
+.client-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.client-meta { flex: 1; min-width: 0; }
+.client-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.client-company { font-size: 12px; color: var(--color-text-secondary); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.main-panel { display: flex; flex-direction: column; }
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  padding: 0 28px;
+  gap: 4px;
+  background: var(--color-background-primary);
+}
+.tab {
+  font-size: 14px;
+  padding: 16px 18px 14px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 600; }
+.panel-body { flex: 1; overflow-y: auto; padding: 28px; background: var(--color-background-app); }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--color-text-tertiary); font-size: 13px; padding: 60px 0; }
+.empty-icon { font-size: 32px; }
+.client-profile { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.profile-card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+}
+.profile-card h4 { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.field-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--color-border-tertiary); gap: 8px; }
+.field-row:last-child { border-bottom: none; }
+.field-label { font-size: 12px; color: var(--color-text-secondary); flex-shrink: 0; }
+.field-value { font-size: 12px; color: var(--color-text-primary); text-align: right; font-weight: 600; }
+.badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+.badge-danger { background: #FCEBEB; color: #A32D2D; }
+.badge-warning { background: #FAEEDA; color: #854F0B; }
+.badge-success { background: #EAF3DE; color: #3B6D11; }
+.badge-info { background: #E6F1FB; color: #185FA5; }
+.docs-section { margin-bottom: 16px; }
+.docs-section h4 { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.doc-card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-card);
+}
+.doc-card.is-clickable { cursor: pointer; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.doc-card.is-clickable:hover { transform: translateY(-1px); border-color: #bfd4fb; box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08); }
+.doc-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.btn-danger {
+  background: #FCEBEB;
+  color: #A32D2D;
+  border-color: #F2B8B8;
+}
+.btn-danger:hover { background: #F8DADA; }
+.doc-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+.doc-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.doc-meta { font-size: 12px; color: var(--color-text-tertiary); margin-top: 8px; }
+.upload-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom: 10px; }
+.upload-input { display:none; }
+.inline-note { font-size:12px; color: var(--color-text-secondary); }
+.ticket-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 11px 13px;
+  font-family: var(--font-sans);
+  resize: vertical;
+  outline: none;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--color-border-primary);
+  background: var(--color-background-primary);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+}
+.form-group input.ai-filled, .form-group select.ai-filled, .form-group textarea.ai-filled { border-color: #185FA5; background: #E6F1FB; color: #042C53; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.autofill-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+  box-shadow: var(--shadow-card);
+}
+.autofill-bar .ai-label { font-size: 12px; color: var(--color-text-secondary); flex: 1; }
+.autofill-bar .ai-status { font-size: 12px; font-weight: 500; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+}
+.btn:hover { background: var(--color-background-secondary); }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.btn-primary:hover { opacity: 0.85; background: var(--color-text-primary); }
+.btn-ai { background: #E6F1FB; color: #185FA5; border-color: #B5D4F4; }
+.btn-ai:hover { background: #B5D4F4; }
+.ticket-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+.typing-cursor { display: inline-block; width: 2px; height: 13px; background: #185FA5; vertical-align: middle; animation: blink 0.7s infinite; margin-left: 2px; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.source-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 2px 7px; color: var(--color-text-secondary); margin-top: 4px; }
+.agent-log { font-size: 11px; color: var(--color-text-tertiary); font-style: italic; margin-top: 2px; min-height: 16px; }
+.spinner { width: 14px; height: 14px; border: 2px solid #B5D4F4; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.agent-indicator {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #185FA5;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.agent-indicator.is-running {
+  background: #E6F1FB;
+  border: 1px solid #B5D4F4;
+}
+.agent-indicator.is-running::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #185FA5;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(0.7); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+}
+.agent-source-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.agent-source-card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow-card);
+}
+.agent-source-card.is-clickable {
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.agent-source-card.is-clickable:hover {
+  transform: translateY(-1px);
+  border-color: #bfd4fb;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+.agent-source-title { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+.agent-source-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+.agent-source-body { font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; line-height: 1.5; }
+
+.document-viewer {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 30;
+}
+.document-viewer.is-open { display: flex; }
+.document-viewer-shell {
+  width: min(1120px, 100%);
+  height: min(760px, 100%);
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  background: var(--color-background-primary);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+.document-viewer-preview {
+  border-right: 1px solid var(--color-border-tertiary);
+  background: #e5e7eb;
+  min-height: 0;
+}
+.document-viewer-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+.document-viewer-fallback {
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  white-space: pre-line;
+}
+.document-viewer-fallback.is-visible { display: flex; }
+.document-viewer-meta {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background-primary);
+}
+.document-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border-tertiary);
+}
+.document-viewer-title { font-size: 16px; font-weight: 600; }
+.document-viewer-close {
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.document-viewer-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.viewer-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.viewer-meta-card {
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--color-background-secondary);
+}
+.viewer-meta-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.viewer-meta-value {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+@media (max-width: 1024px) {
+  body { padding: 12px; }
+  .crm-shell {
+    grid-template-columns: 1fr;
+    min-height: calc(100vh - 24px);
+  }
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-tertiary);
+    max-height: 280px;
+  }
+  .client-profile,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .panel-tabs,
+  .panel-body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+</style>
+
+<div class="crm-shell">
+  <div class="sidebar">
+    <div class="sidebar-header">Customers</div>
+    <div class="search-box">
+      <span class="search-icon">&#9906;</span>
+      <input type="text" id="clientSearch" placeholder="Search customers..." oninput="filterClients(this.value)" />
+    </div>
+    <div class="client-list" id="clientList"></div>
+  </div>
+
+  <div class="main-panel">
+    <div class="panel-tabs">
+      <div class="tab active" id="tab-profile" onclick="switchTab('profile')">Profile &amp; Documents</div>
+      <div class="tab" id="tab-ticket" onclick="switchTab('ticket')">Support Ticket</div>
+      <div class="tab" id="tab-email" onclick="switchTab('email')">Email History</div>
+    </div>
+    <div class="panel-body" id="panelBody">
+      <div class="empty-state">
+        <div class="empty-icon">&#128100;</div>
+        <div>Select a customer to begin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="document-viewer" id="documentViewer">
+  <div class="document-viewer-shell">
+    <div class="document-viewer-preview">
+      <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+      <div class="document-viewer-fallback" id="documentViewerFallback"></div>
+    </div>
+    <div class="document-viewer-meta">
+      <div class="document-viewer-header">
+        <div class="document-viewer-title" id="documentViewerTitle">Document viewer</div>
+        <button class="document-viewer-close" id="documentViewerClose" type="button">Close</button>
+      </div>
+      <div class="document-viewer-body">
+        <div class="viewer-meta-grid">
+          <div class="viewer-meta-card">
+            <div class="viewer-meta-label">Scope</div>
+            <div class="viewer-meta-value" id="documentViewerScope">n/a</div>
+          </div>
+          <div class="viewer-meta-card">
+            <div class="viewer-meta-label">Ticket</div>
+            <div class="viewer-meta-value" id="documentViewerTicket">n/a</div>
+          </div>
+          <div class="viewer-meta-card">
+            <div class="viewer-meta-label">Type</div>
+            <div class="viewer-meta-value" id="documentViewerType">n/a</div>
+          </div>
+          <div class="viewer-meta-card">
+            <div class="viewer-meta-label">Status</div>
+            <div class="viewer-meta-value" id="documentViewerStatus">n/a</div>
+          </div>
+        </div>
+        <div>
+          <div class="viewer-meta-label">Uploaded</div>
+          <div class="viewer-meta-value" id="documentViewerDate">n/a</div>
+        </div>
+        <div>
+          <div class="viewer-meta-label">Reference</div>
+          <div class="viewer-meta-value" id="documentViewerReference">n/a</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
+
+let allCustomers = [];
+let allTickets = [];
+let selectedClient = null;
+let filteredCustomers = [];
+let activeTab = 'profile';
+let agentRunning = false;
+const customerActivityCache = new Map();
+const documentViewer = document.getElementById('documentViewer');
+const documentViewerFrame = document.getElementById('documentViewerFrame');
+const documentViewerFallback = document.getElementById('documentViewerFallback');
+const documentViewerTitle = document.getElementById('documentViewerTitle');
+const documentViewerScope = document.getElementById('documentViewerScope');
+const documentViewerTicket = document.getElementById('documentViewerTicket');
+const documentViewerType = document.getElementById('documentViewerType');
+const documentViewerStatus = document.getElementById('documentViewerStatus');
+const documentViewerDate = document.getElementById('documentViewerDate');
+const documentViewerReference = document.getElementById('documentViewerReference');
+const documentViewerClose = document.getElementById('documentViewerClose');
+
+function openDocumentViewer(options) {
+  const fileUrl = String(options.fileUrl || '');
+  const fileType = String(options.fileType || '').toLowerCase();
+  const pageValue = options.page ? ` page ${options.page}` : '';
+
+  documentViewerTitle.textContent = options.title || 'Document viewer';
+  documentViewerScope.textContent = options.scope || 'n/a';
+  documentViewerTicket.textContent = options.ticket || 'n/a';
+  documentViewerType.textContent = options.typeLabel || options.fileType || 'unknown';
+  documentViewerStatus.textContent = options.status || 'n/a';
+  documentViewerDate.textContent = options.dateLabel || 'n/a';
+  documentViewerReference.textContent = options.reference || 'n/a';
+
+  if (fileUrl && fileType === 'pdf') {
+    const pageSuffix = options.page ? `#page=${options.page}` : '';
+    documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
+    documentViewerFrame.style.display = 'block';
+    documentViewerFallback.classList.remove('is-visible');
+    documentViewerFallback.textContent = '';
+  } else {
+    documentViewerFrame.removeAttribute('src');
+    documentViewerFrame.style.display = 'none';
+    documentViewerFallback.classList.add('is-visible');
+    documentViewerFallback.textContent = fileUrl
+      ? `Preview is only available for PDF files right now.${pageValue ? `\nThis reference points to${pageValue}.` : ''}`
+      : 'This file is not currently available for preview.';
+  }
+
+  documentViewer.classList.add('is-open');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDate(value) {
+  if (!value) return 'Unknown date';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
+function initialsFromName(name) {
+  return String(name || 'C')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'C';
+}
+
+function colorPaletteForCustomer(index) {
+  const palettes = [
+    { color: '#185FA5', bg: '#E6F1FB' },
+    { color: '#3B6D11', bg: '#EAF3DE' },
+    { color: '#854F0B', bg: '#FAEEDA' },
+    { color: '#993556', bg: '#FBEAF0' },
+    { color: '#4C1D95', bg: '#EFEAFE' }
+  ];
+  return palettes[index % palettes.length];
+}
+
+function getTicketIndicatorStyle(ticketCount) {
+  return ticketCount > 0 ? 'background:#E24B4A' : 'background:#639922';
+}
+
+function renderClientList(clients) {
+  const el = document.getElementById('clientList');
+  el.innerHTML = clients.map((c, index) => `
+    <div class="client-item${selectedClient && selectedClient.customer_id === c.customer_id ? ' active' : ''}" onclick="selectClient('${escapeHtml(c.customer_id)}')">
+      <div class="client-avatar" style="background:${c.bg};color:${c.color}">${escapeHtml(initialsFromName(c.full_name))}</div>
+      <div class="client-meta">
+        <div class="client-name">${escapeHtml(c.full_name)}</div>
+        <div class="client-company">${escapeHtml(c.email)}</div>
+      </div>
+      <div class="status-dot" title="${c.ticket_count > 0 ? 'Has tickets' : 'No tickets'}" style="${getTicketIndicatorStyle(c.ticket_count)}"></div>
+    </div>
+  `).join('');
+}
+
+function filterClients(query) {
+  const lowered = String(query || '').toLowerCase();
+  filteredCustomers = allCustomers.filter((customer) => {
+    return [customer.full_name, customer.email, customer.customer_id, customer.username]
+      .some((value) => String(value || '').toLowerCase().includes(lowered));
+  });
+  renderClientList(filteredCustomers);
+}
+
+async function selectClient(customerId) {
+  selectedClient = allCustomers.find((customer) => customer.customer_id === customerId) || null;
+  renderClientList(filteredCustomers);
+  activeTab = 'profile';
+  updateTabs();
+  if (!selectedClient) {
+    renderEmptyState('Customer not found.');
+    return;
+  }
+  await ensureCustomerActivity(selectedClient);
+  renderActiveTab();
+}
+
+function switchTab(tab) {
+  if (!selectedClient) return;
+  activeTab = tab;
+  updateTabs();
+  renderActiveTab();
+}
+
+function updateTabs() {
+  document.getElementById('tab-profile').className = 'tab' + (activeTab === 'profile' ? ' active' : '');
+  document.getElementById('tab-ticket').className = 'tab' + (activeTab === 'ticket' ? ' active' : '');
+  document.getElementById('tab-email').className = 'tab' + (activeTab === 'email' ? ' active' : '');
+}
+
+function renderEmptyState(message) {
+  document.getElementById('panelBody').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">&#128100;</div>
+      <div>${escapeHtml(message)}</div>
+    </div>
+  `;
+}
+
+async function ensureCustomerActivity(customer) {
+  if (customerActivityCache.has(customer.customer_id)) {
+    return customerActivityCache.get(customer.customer_id);
+  }
+
+  const customerTickets = allTickets.filter((ticket) => ticket.customer_id === customer.customer_id);
+  const ticketDetails = await Promise.all(
+    customerTickets.map(async (ticket) => {
+      const response = await fetch(`${API_BASE_URL}/tickets/${ticket.id}/messages`);
+      const payload = await response.json();
+      const messages = Array.isArray(payload.messages) ? payload.messages : [];
+      return { ticket, messages };
+    })
+  );
+
+  const allMessages = ticketDetails.flatMap(({ ticket, messages }) =>
+    messages.map((message) => ({ ...message, ticket }))
+  );
+  const outboundMessages = allMessages
+    .filter((message) => message.sender_role === 'employee' || message.sender_role === 'assistant')
+    .sort((left, right) => new Date(right.created_at) - new Date(left.created_at));
+
+  const inboundMessages = allMessages
+    .filter((message) => message.sender_role === 'customer')
+    .sort((left, right) => new Date(right.created_at) - new Date(left.created_at));
+
+  const mailResponse = await fetch(`${API_BASE_URL}/mail?customer_id=${encodeURIComponent(customer.customer_id)}`);
+  const mailPayload = await mailResponse.json();
+  const mailItems = Array.isArray(mailPayload.mail) ? mailPayload.mail : [];
+  const filesResponse = await fetch(`${API_BASE_URL}/customer-files?customer_id=${encodeURIComponent(customer.customer_id)}`);
+  const filesPayload = await filesResponse.json();
+  const uploadedFiles = Array.isArray(filesPayload.files) ? filesPayload.files : [];
+
+  const activity = {
+    tickets: customerTickets,
+    outboundMessages,
+    inboundMessages,
+    allMessages: allMessages.sort((left, right) => new Date(right.created_at) - new Date(left.created_at)),
+    mailItems,
+    uploadedFiles
+  };
+  customerActivityCache.set(customer.customer_id, activity);
+  return activity;
+}
+
+function renderEmailCards(messages, emptyText) {
+  if (!messages.length) {
+    return `<div class="doc-card"><div class="doc-body">${escapeHtml(emptyText)}</div></div>`;
+  }
+  return messages.map((message) => `
+    <div class="doc-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div class="doc-title">${escapeHtml(message.ticket.subject || `Ticket #${message.ticket.id}`)}</div>
+        <span class="badge badge-info" style="margin-left:auto">${escapeHtml(message.sender_role === 'assistant' ? 'AI reply' : 'Support email')}</span>
+      </div>
+      <div class="doc-body">${escapeHtml(message.content)}</div>
+      <div class="doc-meta">${escapeHtml(formatDate(message.created_at))} · Ticket #${message.ticket.id}</div>
+    </div>
+  `).join('');
+}
+
+function renderProfile() {
+  const c = selectedClient;
+  const activity = customerActivityCache.get(c.customer_id) || { tickets: [], outboundMessages: [], mailItems: [], uploadedFiles: [] };
+  document.getElementById('panelBody').innerHTML = `
+    <div class="client-profile">
+      <div class="profile-card">
+        <h4>Account details</h4>
+        <div class="field-row"><span class="field-label">Customer ID</span><span class="field-value">${escapeHtml(c.customer_id)}</span></div>
+        <div class="field-row"><span class="field-label">Customer Name</span><span class="field-value">${escapeHtml(c.full_name)}</span></div>
+        <div class="field-row"><span class="field-label">Email ID</span><span class="field-value">${escapeHtml(c.email)}</span></div>
+      </div>
+      <div class="profile-card">
+        <h4>Status</h4>
+        <div class="field-row"><span class="field-label">Tickets</span><span class="field-value">${c.ticket_count}</span></div>
+        <div class="field-row"><span class="field-label">Open tickets</span><span class="field-value">${c.open_ticket_count}</span></div>
+        <div class="field-row"><span class="field-label">Username</span><span class="field-value">${escapeHtml(c.username)}</span></div>
+      </div>
+    </div>
+    <div class="docs-section">
+      <h4>Customer uploaded files (${activity.uploadedFiles.length})</h4>
+      ${renderCustomerFiles(activity.uploadedFiles)}
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <button class="btn btn-ai" onclick="switchTab('ticket')">Auto-fill support ticket &rarr;</button>
+    </div>
+  `;
+}
+
+function renderCustomerFiles(files) {
+  if (!files.length) {
+    return `<div class="doc-card"><div class="doc-body">This customer has not uploaded any files yet.</div></div>`;
+  }
+  return files.map((file) => `
+    <div
+      class="doc-card is-clickable"
+      data-file-id="${escapeHtml(String(file.id))}"
+      data-file-ticket="${escapeHtml(String(file.ticket_id))}"
+      data-file-scope="customer"
+      data-file-name="${escapeHtml(file.filename)}"
+      data-file-type="${escapeHtml(file.file_type || '')}"
+      data-file-status="${escapeHtml(file.parse_status || '')}"
+      data-file-created="${escapeHtml(file.created_at || '')}"
+    >
+      <div class="doc-title">${escapeHtml(file.filename)}</div>
+      <div class="doc-meta">
+        Ticket #${escapeHtml(String(file.ticket_id))} · ${escapeHtml(file.file_type || 'unknown')} · ${escapeHtml(file.parse_status || 'pending')} · ${escapeHtml(formatDate(file.created_at))}
+      </div>
+      ${file.error_message ? `<div class="doc-body" style="margin-top:6px;color:#A32D2D">${escapeHtml(file.error_message)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function openDocumentViewerFromFile(file) {
+  const fileScope = String(file.scope || 'customer');
+  const fileId = String(file.id || '');
+  const fileUrl = fileScope === 'company'
+    ? `${API_BASE_URL}/company-files/${encodeURIComponent(fileId)}`
+    : `${API_BASE_URL}/uploaded-files/${encodeURIComponent(fileId)}`;
+  openDocumentViewer({
+    title: file.filename || 'Document viewer',
+    scope: fileScope === 'company' ? 'Company policy' : 'Customer upload',
+    ticket: file.ticket_id ? `Ticket #${file.ticket_id}` : 'n/a',
+    typeLabel: file.file_type || 'unknown',
+    status: file.parse_status || 'n/a',
+    dateLabel: formatDate(file.created_at || ''),
+    reference: fileUrl,
+    fileType: file.file_type || '',
+    fileUrl,
+  });
+}
+
+function closeDocumentViewer() {
+  documentViewer.classList.remove('is-open');
+  documentViewerFrame.removeAttribute('src');
+  documentViewerFallback.classList.remove('is-visible');
+  documentViewerFallback.textContent = '';
+}
+
+function renderTicket() {
+  const c = selectedClient;
+  const activity = customerActivityCache.get(c.customer_id) || { outboundMessages: [], inboundMessages: [], tickets: [], mailItems: [] };
+  const openTickets = activity.tickets
+    .filter((ticket) => String(ticket.status || '') !== 'Closed')
+    .sort((left, right) => new Date(right.updated_at) - new Date(left.updated_at));
+  const ticketOptions = openTickets.length
+    ? openTickets.map((ticket) => `
+        <option value="${ticket.id}">
+          Ticket #${ticket.id} - ${escapeHtml(ticket.subject || 'No subject')}
+        </option>
+      `).join('')
+    : '<option value="">No open tickets available</option>';
+  document.getElementById('panelBody').innerHTML = `
+    <div class="autofill-bar">
+      <div class="agent-indicator" id="agentIndicator">
+        <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 4l2 2 4-4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <span class="ai-label">CRM agent can use <strong>${activity.mailItems.length}</strong> sent emails and <strong>${openTickets.length}</strong> open tickets for <strong>${escapeHtml(c.full_name)}</strong></span>
+      <span class="ai-status" id="agentStatus" style="color:var(--color-text-tertiary)">Ready</span>
+    </div>
+    <div class="agent-log" id="agentLog"></div>
+    <div class="ticket-form" id="ticketForm" style="margin-top:10px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Customer ID</label>
+          <input type="text" id="f-customer-id" value="${escapeHtml(c.customer_id)}" readonly />
+        </div>
+        <div class="form-group">
+          <label>Customer name</label>
+          <input type="text" id="f-client" value="${escapeHtml(c.full_name)}" readonly />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email ID</label>
+          <input type="text" id="f-email" value="${escapeHtml(c.email)}" readonly />
+        </div>
+        <div class="form-group">
+          <label>Ticket No</label>
+          <select id="f-ticket-id" ${openTickets.length ? '' : 'disabled'}>
+            ${ticketOptions}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="f-category"><option>-- select --</option><option>Login / Access Issues</option><option>Payment Failure</option><option>Product Bug</option><option>Document Verification</option><option>Service Cancellation</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Issue summary</label>
+        <input type="text" id="f-issue" placeholder="Describe the issue..." />
+      </div>
+      <div class="form-group">
+        <label>Relevant context</label>
+        <textarea id="f-context" rows="4" placeholder="Relevant content from email history and previous tickets..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Reasoning</label>
+        <textarea id="f-reasoning" rows="4" placeholder="Why the agent chose this category and next step..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Suggested resolution</label>
+        <textarea id="f-resolution" rows="3" placeholder="Recommended next steps for the support team..."></textarea>
+      </div>
+      <div id="sourceRow" style="display:none">
+        <div class="source-tag" id="sourceTag"></div>
+        <div class="agent-source-list" id="agentSourceList"></div>
+      </div>
+    </div>
+    <div class="ticket-actions" style="margin-top:12px">
+      <button class="btn" onclick="clearTicket()">Clear</button>
+      <button class="btn btn-ai" onclick="runAgent()" id="btnAutofill">Auto-fill with AI agent &#x2192;</button>
+      <button class="btn btn-primary" onclick="submitTicket()" id="btnSubmit" style="display:none">Submit ticket</button>
+    </div>
+  `;
+  setAgentVisualState('ready');
+}
+
+function renderEmailHistory() {
+  const c = selectedClient;
+  const activity = customerActivityCache.get(c.customer_id) || { mailItems: [] };
+  document.getElementById('panelBody').innerHTML = `
+    <div class="docs-section">
+      <h4>Email history sent to customer (${activity.mailItems.length})</h4>
+      ${renderEmailCards(
+        activity.mailItems.map((mail) => ({
+          ticket: { id: mail.ticket_id, subject: mail.subject },
+          sender_role: 'employee',
+          content: mail.body,
+          created_at: mail.created_at
+        })),
+        'No support emails have been sent to this customer yet. Resolved tickets will appear here.'
+      )}
+    </div>
+  `;
+}
+
+function summarizeLatestIssue(activity) {
+  const latestInbound = activity.inboundMessages[0];
+  const latestTicket = activity.tickets
+    .slice()
+    .sort((left, right) => new Date(right.updated_at) - new Date(left.updated_at))[0];
+  if (latestInbound?.content) {
+    return latestInbound.content.slice(0, 120);
+  }
+  if (latestTicket?.subject) {
+    return latestTicket.subject.slice(0, 120);
+  }
+  return 'Follow-up needed based on recent customer support history.';
+}
+
+function inferCategory(text) {
+  const lowered = text.toLowerCase();
+  if (/(login|access|password|otp|signin|sign in|sso|locked|unlock)/.test(lowered)) return 'Login / Access Issues';
+  if (/(refund|invoice|payment|billing|charge|failed payment|declined|transaction)/.test(lowered)) return 'Payment Failure';
+  if (/(bug|error|issue|crash|broken|not working|defect|api)/.test(lowered)) return 'Product Bug';
+  if (/(document|kyc|verification|verify|proof|upload|rejected)/.test(lowered)) return 'Document Verification';
+  if (/(cancel|cancellation|close account|termination|deactivate|unsubscribe)/.test(lowered)) return 'Service Cancellation';
+  return 'Product Bug';
+}
+
+function resolutionForCategory(category) {
+  if (category === 'Login / Access Issues') return 'Verify the user identity, review access logs or authentication errors, and share the exact steps needed to restore account access.';
+  if (category === 'Payment Failure') return 'Check the payment status, identify the failed transaction or invoice, and guide the customer on the next payment or refund step.';
+  if (category === 'Product Bug') return 'Capture reproducible details, confirm impact and affected workflow, and route the issue to engineering with clear context.';
+  if (category === 'Document Verification') return 'Review the submitted documents, identify missing or invalid items, and send the customer the exact verification requirements.';
+  if (category === 'Service Cancellation') return 'Confirm the cancellation request, review any dependencies or retention steps, and communicate the closure timeline and account impact.';
+  return 'Review recent ticket history, confirm the customer ask, and send a concise follow-up with the next action owner.';
+}
+
+function setAgentVisualState(state) {
+  const indicator = document.getElementById('agentIndicator');
+  const status = document.getElementById('agentStatus');
+  if (!indicator || !status) return;
+
+  indicator.className = 'agent-indicator';
+  indicator.style.background = '#185FA5';
+  if (state === 'running') {
+    indicator.classList.add('is-running');
+    indicator.style.background = '';
+    indicator.innerHTML = '';
+    status.textContent = 'Running...';
+    status.style.color = '#185FA5';
+    return;
+  }
+  if (state === 'error') {
+    indicator.innerHTML = '&#33;';
+    indicator.style.background = '#A32D2D';
+    status.textContent = 'Error';
+    status.style.color = '#A32D2D';
+    return;
+  }
+  if (state === 'done') {
+    indicator.innerHTML = '&#10003;';
+    indicator.style.background = '#3B6D11';
+    status.textContent = 'Done';
+    status.style.color = '#3B6D11';
+    return;
+  }
+  indicator.innerHTML = '<svg width="8" height="8" viewBox="0 0 8 8"><path d="M1 4l2 2 4-4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>';
+  status.textContent = 'Ready';
+  status.style.color = 'var(--color-text-tertiary)';
+}
+
+function renderAgentSources(sources) {
+  const row = document.getElementById('sourceRow');
+  const tag = document.getElementById('sourceTag');
+  const list = document.getElementById('agentSourceList');
+  if (!row || !tag || !list) return;
+
+  if (!Array.isArray(sources) || !sources.length) {
+    row.style.display = 'none';
+    tag.textContent = '';
+    list.innerHTML = '';
+    return;
+  }
+
+  row.style.display = 'block';
+  tag.textContent = `${sources.length} source${sources.length === 1 ? '' : 's'} used`;
+  list.innerHTML = sources.map((source, index) => `
+    <div
+      class="agent-source-card${source.file_url ? ' is-clickable' : ''}"
+      data-file-id="${escapeHtml(String(source.file_id || ''))}"
+      data-file-ticket="${escapeHtml(String(source.ticket_id || ''))}"
+      data-file-scope="${escapeHtml(String(source.scope || 'customer'))}"
+      data-file-name="${escapeHtml(String(source.source_file || `Source ${index + 1}`))}"
+      data-file-type="${escapeHtml(String(source.file_type || ''))}"
+      data-file-status="Referenced"
+      data-file-created="${escapeHtml(String(source.uploaded_at || source.document_date || ''))}"
+      data-file-page="${escapeHtml(String(source.page || ''))}"
+      data-file-reference="${escapeHtml(String(source.text_excerpt || ''))}"
+    >
+      <div class="agent-source-title">${escapeHtml(String(source.source_file || `Source ${index + 1}`))}</div>
+      <div class="agent-source-meta">${escapeHtml(String(source.scope === 'company' ? 'Company policy' : 'Customer history'))} · ${escapeHtml(String(source.document_date || source.uploaded_at || 'Unknown date'))}</div>
+      <div class="agent-source-body">${escapeHtml(String(source.text_excerpt || 'No excerpt available.'))}</div>
+    </div>
+  `).join('');
+}
+
+async function runAgent() {
+  if (agentRunning || !selectedClient) return;
+  const selectedTicketId = document.getElementById('f-ticket-id')?.value || '';
+  if (!selectedTicketId) {
+    document.getElementById('agentLog').textContent = 'Select an open ticket to auto-fill this form.';
+    document.getElementById('agentStatus').textContent = 'Waiting';
+    document.getElementById('agentStatus').style.color = '#854F0B';
+    return;
+  }
+  agentRunning = true;
+  const button = document.getElementById('btnAutofill');
+  button.disabled = true;
+  button.textContent = 'Running agent...';
+
+  const activity = customerActivityCache.get(selectedClient.customer_id) || { outboundMessages: [], inboundMessages: [], tickets: [] };
+  const steps = [
+    'Reading the selected ticket and previous ticket history...',
+    'Pulling support email history for relevant context...',
+    'Using Groq to write reasoning and recommend next steps...'
+  ];
+  setAgentVisualState('running');
+
+  for (const step of steps) {
+    document.getElementById('agentLog').textContent = step;
+    await sleep(420);
+  }
+
+  let payload;
+  try {
+    const response = await fetch(`${API_BASE_URL}/crm/autofill`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_id: selectedClient.customer_id,
+        customer_name: selectedClient.full_name,
+        email: selectedClient.email,
+        ticket_id: selectedTicketId
+      })
+    });
+    payload = await response.json();
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Groq autofill failed.');
+    }
+  } catch (error) {
+    document.getElementById('agentLog').textContent = String(error?.message || 'Groq autofill failed.');
+    setAgentVisualState('error');
+    button.disabled = false;
+    button.textContent = 'Try again →';
+    agentRunning = false;
+    return;
+  }
+
+  const autofill = payload.autofill || {};
+  const issueSummary = autofill.issue_summary || summarizeLatestIssue(activity);
+  const category = autofill.category || inferCategory(issueSummary);
+  const relevantContext = autofill.relevant_context || '';
+  const reasoning = autofill.reasoning || '';
+  const suggestedResolution = autofill.suggested_resolution || resolutionForCategory(category);
+  const sources = Array.isArray(payload.sources) ? payload.sources : [];
+
+  document.getElementById('agentLog').textContent = 'Agent complete — the form now includes history, reasoning, and suggested next steps.';
+  setAgentVisualState('done');
+
+  await typeField('f-category', category, true);
+  await typeField('f-issue', issueSummary, false, true);
+  await typeField('f-context', relevantContext, false, true);
+  await typeField('f-reasoning', reasoning, false, true);
+  await typeField('f-resolution', suggestedResolution, false, true);
+  renderAgentSources(sources);
+  document.getElementById('btnSubmit').style.display = 'inline-flex';
+  button.disabled = false;
+  button.textContent = 'Re-run agent →';
+  agentRunning = false;
+}
+
+async function typeField(id, value, isSelect, animate) {
+  const el = document.getElementById(id);
+  if (!el || !value) return;
+  el.className = el.className.replace(' ai-filled', '') + ' ai-filled';
+  if (isSelect) {
+    el.value = value;
+    await sleep(120);
+    return;
+  }
+  if (animate) {
+    el.value = '';
+    const chars = value.split('');
+    for (let i = 0; i < chars.length; i++) {
+      el.value += chars[i];
+      if (i % 4 === 0) await sleep(12);
+    }
+  } else {
+    el.value = value;
+  }
+  await sleep(80);
+}
+
+function clearTicket() {
+  renderTicket();
+}
+
+async function submitTicket() {
+  if (!selectedClient) return;
+
+  const ticketId = document.getElementById('f-ticket-id')?.value || '';
+  const submitButton = document.getElementById('btnSubmit');
+  if (!ticketId) {
+    document.getElementById('agentLog').textContent = 'Select an open ticket before submitting.';
+    document.getElementById('agentStatus').textContent = 'Waiting';
+    document.getElementById('agentStatus').style.color = '#854F0B';
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = 'Submitting...';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/tickets/${encodeURIComponent(ticketId)}/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'employee'
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Unable to close the ticket.');
+    }
+
+    const [customersResponse, ticketsResponse] = await Promise.all([
+      fetch(`${API_BASE_URL}/customers`),
+      fetch(`${API_BASE_URL}/tickets?role=employee`)
+    ]);
+    const customersPayload = await customersResponse.json();
+    const ticketsPayload = await ticketsResponse.json();
+
+    const customers = Array.isArray(customersPayload.customers) ? customersPayload.customers : [];
+    allTickets = Array.isArray(ticketsPayload.tickets) ? ticketsPayload.tickets : [];
+    allCustomers = customers.map((customer, index) => ({
+      ...customer,
+      ticket_count: Number(customer.ticket_count || 0),
+      open_ticket_count: Number(customer.open_ticket_count || 0),
+      ...colorPaletteForCustomer(index)
+    }));
+    filteredCustomers = allCustomers.slice();
+    selectedClient = allCustomers.find((customer) => customer.customer_id === selectedClient.customer_id) || selectedClient;
+    renderClientList(filteredCustomers);
+
+    customerActivityCache.delete(selectedClient.customer_id);
+    await ensureCustomerActivity(selectedClient);
+
+    document.getElementById('agentLog').textContent = `Ticket #${ticketId} closed and resolution email saved to customer history.`;
+    document.getElementById('agentStatus').textContent = 'Submitted';
+    document.getElementById('agentStatus').style.color = '#3B6D11';
+    submitButton.textContent = 'Submitted';
+    activeTab = 'email';
+    updateTabs();
+    renderActiveTab();
+  } catch (error) {
+    document.getElementById('agentLog').textContent = String(error?.message || 'Unable to submit ticket.');
+    document.getElementById('agentStatus').textContent = 'Error';
+    document.getElementById('agentStatus').style.color = '#A32D2D';
+    submitButton.disabled = false;
+    submitButton.textContent = 'Submit ticket';
+  }
+}
+
+function renderActiveTab() {
+  if (!selectedClient) {
+    renderEmptyState('Select a customer to begin');
+    return;
+  }
+  if (activeTab === 'profile') {
+    renderProfile();
+    return;
+  }
+  if (activeTab === 'email') {
+    renderEmailHistory();
+    return;
+  }
+  renderTicket();
+}
+
+async function loadCustomers() {
+  renderEmptyState('Loading customers...');
+  const [customersResponse, ticketsResponse] = await Promise.all([
+    fetch(`${API_BASE_URL}/customers`),
+    fetch(`${API_BASE_URL}/tickets?role=employee`)
+  ]);
+  const customersPayload = await customersResponse.json();
+  const ticketsPayload = await ticketsResponse.json();
+  const customers = Array.isArray(customersPayload.customers) ? customersPayload.customers : [];
+  allTickets = Array.isArray(ticketsPayload.tickets) ? ticketsPayload.tickets : [];
+  allCustomers = customers.map((customer, index) => ({
+    ...customer,
+    ticket_count: Number(customer.ticket_count || 0),
+    open_ticket_count: Number(customer.open_ticket_count || 0),
+    ...colorPaletteForCustomer(index)
+  }));
+  filteredCustomers = allCustomers.slice();
+  renderClientList(filteredCustomers);
+  if (!allCustomers.length) {
+    renderEmptyState('No customers found yet.');
+    return;
+  }
+  await selectClient(allCustomers[0].customer_id);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+document.addEventListener('click', (event) => {
+  const card = event.target.closest('.doc-card.is-clickable');
+  if (card) {
+    openDocumentViewerFromFile({
+      id: card.dataset.fileId,
+      ticket_id: card.dataset.fileTicket,
+      scope: card.dataset.fileScope,
+      filename: card.dataset.fileName,
+      file_type: card.dataset.fileType,
+      parse_status: card.dataset.fileStatus,
+      created_at: card.dataset.fileCreated,
+    });
+    return;
+  }
+
+  const sourceCard = event.target.closest('.agent-source-card.is-clickable');
+  if (sourceCard) {
+    openDocumentViewer({
+      title: sourceCard.dataset.fileName || 'Referenced source',
+      scope: sourceCard.dataset.fileScope === 'company' ? 'Company policy' : 'Customer history',
+      ticket: sourceCard.dataset.fileTicket ? `Ticket #${sourceCard.dataset.fileTicket}` : 'n/a',
+      typeLabel: sourceCard.dataset.fileType || 'unknown',
+      status: sourceCard.dataset.fileStatus || 'Referenced',
+      dateLabel: formatDate(sourceCard.dataset.fileCreated || ''),
+      reference: sourceCard.dataset.fileReference || 'Referenced by CRM agent',
+      fileType: sourceCard.dataset.fileType || '',
+      fileUrl: sourceCard.dataset.fileScope === 'company'
+        ? `${API_BASE_URL}/company-files/${encodeURIComponent(sourceCard.dataset.fileId || '')}`
+        : `${API_BASE_URL}/uploaded-files/${encodeURIComponent(sourceCard.dataset.fileId || '')}`,
+      page: sourceCard.dataset.filePage || ''
+    });
+    return;
+  }
+
+  if (event.target === documentViewer) {
+    closeDocumentViewer();
+  }
+});
+
+documentViewerClose.addEventListener('click', closeDocumentViewer);
+
+Promise.all([loadCustomers()])
+  .then(() => {
+    if (selectedClient) {
+      renderActiveTab();
+    }
+  })
+  .catch((error) => {
+    renderEmptyState(`Unable to load customers: ${error.message}`);
+  });
+</script>

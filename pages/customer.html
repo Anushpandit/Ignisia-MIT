@@ -6,18 +6,20 @@
     <title>Customer Dashboard</title>
     <style>
       :root {
-        --bg: #f5f5f5;
+        --bg: #eef2f7;
         --panel: #ffffff;
-        --border: #e0e0e0;
-        --input-border: #d1d5db;
-        --text: #1a1a1a;
-        --muted: #6b7280;
-        --active: #f3f4f6;
+        --panel-soft: #f8fafc;
+        --border: #d9e1ec;
+        --input-border: #d1d9e6;
+        --text: #212936;
+        --muted: #6f7c8f;
+        --active: #edf4ff;
         --button: #1a1a1a;
         --green: #16a34a;
         --green-bg: #dcfce7;
         --amber: #d97706;
         --amber-bg: #fef3c7;
+        --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
       }
 
       * {
@@ -43,9 +45,20 @@
       }
 
       .dashboard {
-        height: 100vh;
+        height: calc(100vh - 32px);
+        margin: 16px;
         display: grid;
         grid-template-columns: 220px 1fr 300px;
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(217, 225, 236, 0.9);
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .dashboard.history-hidden {
+        grid-template-columns: 220px 1fr;
       }
 
       .left-sidebar,
@@ -60,7 +73,7 @@
         gap: 20px;
         padding: 20px 16px;
         overflow-y: auto;
-        background: var(--panel);
+        background: rgba(255, 255, 255, 0.88);
         border-right: 1px solid var(--border);
       }
 
@@ -79,11 +92,11 @@
       .primary-sidebar-button {
         width: 100%;
         border: 0;
-        border-radius: 8px;
+        border-radius: 12px;
         background: var(--button);
         color: #ffffff;
         text-align: left;
-        padding: 10px 12px;
+        padding: 12px 14px;
         cursor: pointer;
       }
 
@@ -103,10 +116,10 @@
       .mail-card {
         width: 100%;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        background: #fafafa;
+        border-radius: 16px;
+        background: var(--panel-soft);
         text-align: left;
-        padding: 10px;
+        padding: 12px;
         cursor: pointer;
       }
 
@@ -140,8 +153,9 @@
       .mail-detail {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 18px;
         padding: 18px;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
       }
 
       .mail-detail-header {
@@ -186,8 +200,8 @@
         background: transparent;
         color: var(--muted);
         text-align: left;
-        padding: 8px 10px;
-        border-radius: 6px;
+        padding: 10px 12px;
+        border-radius: 10px;
         cursor: pointer;
       }
 
@@ -219,9 +233,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 16px 20px;
+        padding: 18px 28px;
         border-bottom: 1px solid var(--border);
-        background: var(--panel);
+        background: rgba(255, 255, 255, 0.7);
       }
 
       .main-title {
@@ -234,7 +248,7 @@
         border-radius: 999px;
         background: var(--panel);
         color: var(--text);
-        padding: 7px 12px;
+        padding: 8px 14px;
       }
 
       .chat-stage {
@@ -287,7 +301,8 @@
         border: 1px solid #3a3a3a;
         border-radius: 999px;
         background: #2d2d2d;
-        padding: 10px 14px;
+        padding: 12px 14px;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
       }
 
       .composer-files {
@@ -309,6 +324,21 @@
         color: var(--text);
         padding: 6px 10px;
         font-size: 12px;
+      }
+
+      .file-chip-remove {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        font-size: 14px;
+      }
+
+      .chat-input-shell.is-drop-target {
+        border-color: #7aa7ff;
+        box-shadow: 0 0 0 4px rgba(122, 167, 255, 0.18), 0 18px 36px rgba(15, 23, 42, 0.14);
       }
 
       .composer-icon-button,
@@ -367,9 +397,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 16px 20px;
+        padding: 18px 28px;
         border-bottom: 1px solid var(--border);
-        background: var(--panel);
+        background: rgba(255, 255, 255, 0.78);
       }
 
       .workspace-subtitle {
@@ -381,7 +411,7 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 20px;
+        padding: 24px 28px;
         display: flex;
         flex-direction: column;
         gap: 14px;
@@ -400,8 +430,8 @@
       }
 
       .bubble {
-        border-radius: 8px;
-        padding: 12px 14px;
+        border-radius: 18px;
+        padding: 14px 16px;
       }
 
       .user .bubble {
@@ -413,18 +443,162 @@
         border: 1px solid var(--border);
       }
 
+      .source-reference-panel {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .source-reference-chip {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--text);
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .document-viewer {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.48);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 20;
+      }
+
+      .document-viewer.is-open {
+        display: flex;
+      }
+
+      .document-viewer-shell {
+        width: min(1120px, 100%);
+        height: min(760px, 100%);
+        display: grid;
+        grid-template-columns: 1.4fr 0.9fr;
+        background: var(--panel);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+      }
+
+      .document-viewer-preview {
+        border-right: 1px solid var(--border);
+        background: #e5e7eb;
+        min-height: 0;
+      }
+
+      .document-viewer-frame {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #ffffff;
+      }
+
+      .document-viewer-fallback {
+        height: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        white-space: pre-line;
+      }
+
+      .document-viewer-fallback.is-visible {
+        display: flex;
+      }
+
+      .document-viewer-meta {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+      }
+
+      .document-viewer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .document-viewer-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .document-viewer-close {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #ffffff;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .document-viewer-body {
+        padding: 18px 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .viewer-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .viewer-meta-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #f8fafc;
+      }
+
+      .viewer-meta-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .viewer-meta-value {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-word;
+      }
+
+      .viewer-excerpt {
+        border: 1px solid #fcd34d;
+        border-radius: 10px;
+        background: #fffbeb;
+        padding: 14px;
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+
       .chat-input-bar {
         flex: 0 0 auto;
         border-top: 1px solid var(--border);
-        background: var(--panel);
-        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.78);
+        padding: 16px 28px 22px;
       }
 
       .content-scroll {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 20px;
+        padding: 28px;
       }
 
       .panel-stack {
@@ -438,14 +612,15 @@
       .setting-row {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 18px;
       }
 
       .ticket-card {
         width: 100%;
         text-align: left;
-        padding: 14px;
+        padding: 18px;
         cursor: pointer;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
       }
 
       .ticket-card.is-active,
@@ -484,7 +659,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
+        border-radius: 999px;
         padding: 4px 8px;
         font-size: 11px;
       }
@@ -505,11 +680,12 @@
       }
 
       .setting-row {
-        padding: 14px 16px;
+        padding: 18px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
       }
 
       .setting-label {
@@ -523,10 +699,10 @@
 
       .danger-button {
         border: 0;
-        border-radius: 6px;
+        border-radius: 10px;
         background: #1a1a1a;
         color: #ffffff;
-        padding: 8px 14px;
+        padding: 10px 16px;
         cursor: pointer;
       }
 
@@ -562,10 +738,14 @@
       }
 
       .right-sidebar {
-        background: var(--panel);
+        background: rgba(255, 255, 255, 0.88);
         border-left: 1px solid var(--border);
         overflow-y: auto;
         padding: 16px;
+      }
+
+      .dashboard.history-hidden .right-sidebar {
+        display: none;
       }
 
       .sidebar-header {
@@ -598,11 +778,12 @@
       .history-card {
         width: 100%;
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 16px;
         background: var(--panel);
         text-align: left;
-        padding: 12px;
+        padding: 14px;
         cursor: pointer;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
       }
 
       .history-top {
@@ -637,6 +818,33 @@
 
         .right-sidebar {
           display: none;
+        }
+      }
+
+      @media (max-width: 900px) {
+        body {
+          overflow: auto;
+        }
+
+        .dashboard {
+          height: auto;
+          min-height: calc(100vh - 24px);
+          margin: 12px;
+          grid-template-columns: 1fr;
+        }
+
+        .dashboard.history-hidden {
+          grid-template-columns: 1fr;
+        }
+
+        .left-sidebar,
+        .main-column {
+          border-right: 0;
+          border-left: 0;
+        }
+
+        .left-sidebar {
+          border-bottom: 1px solid var(--border);
         }
       }
     </style>
@@ -678,7 +886,7 @@
                     id="emptyChatUpload"
                     type="file"
                     multiple
-                    accept=".pdf,.txt,.md,.markdown,.eml,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp"
+                    accept=".pdf,.txt,.md,.markdown,.eml,.csv,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.json,.log,.xml,.yaml,.yml,text/*,image/*,application/pdf,message/rfc822"
                   />
                   <input class="chat-input" id="emptyChatInput" type="text" placeholder="Ask anything" />
                   <button class="ask-button" id="emptyChatAskButton">Create ticket</button>
@@ -710,7 +918,7 @@
                       id="workspaceUpload"
                       type="file"
                       multiple
-                      accept=".pdf,.txt,.md,.markdown,.eml,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp"
+                      accept=".pdf,.txt,.md,.markdown,.eml,.csv,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.json,.log,.xml,.yaml,.yml,text/*,image/*,application/pdf,message/rfc822"
                     />
                     <input class="chat-input" id="workspaceInput" type="text" placeholder="Ask anything" />
                     <button class="ask-button" id="workspaceAskButton">Send</button>
@@ -742,30 +950,7 @@
             <div class="content-scroll">
               <div class="panel-stack">
                 <div class="sidebar-label">Inbox</div>
-                <div class="mail-list">
-                  <article
-                    class="mail-card"
-                    data-mail-id="refund-follow-up"
-                    data-mail-subject="Refund policy follow-up"
-                    data-mail-from="support@knowledgeagent.ai"
-                    data-mail-date="Mar 12 2025"
-                    data-mail-body="Hello,\n\nWe reviewed your refund policy question and confirmed that the March 2025 order thread is covered by the current 30-day refund window.\n\nOur support agent has linked the latest policy notes to your ticket for follow-up.\n\nBest,\nKnowledgeAgent Support"
-                  >
-                    <div class="mail-subject">Refund policy follow-up</div>
-                    <div class="mail-meta">support@knowledgeagent.ai</div>
-                  </article>
-                  <article
-                    class="mail-card"
-                    data-mail-id="quote-review"
-                    data-mail-subject="Quote review attached"
-                    data-mail-from="tickets@knowledgeagent.ai"
-                    data-mail-date="Mar 14 2025"
-                    data-mail-body="Hello,\n\nWe attached the latest quote review summary for your pricing ticket. The team found a mismatch between the spreadsheet and the renewal quote.\n\nA pending follow-up has been added to your case, and we will send an update once the review is complete.\n\nRegards,\nKnowledgeAgent Tickets"
-                  >
-                    <div class="mail-subject">Quote review attached</div>
-                    <div class="mail-meta">tickets@knowledgeagent.ai</div>
-                  </article>
-                </div>
+                <div class="mail-list" id="mailList"></div>
               </div>
             </div>
           </div>
@@ -830,9 +1015,53 @@
       </aside>
     </div>
 
+    <div class="document-viewer" id="documentViewer">
+      <div class="document-viewer-shell">
+        <div class="document-viewer-preview">
+          <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+          <div class="document-viewer-fallback" id="documentViewerFallback"></div>
+        </div>
+        <div class="document-viewer-meta">
+          <div class="document-viewer-header">
+            <div class="document-viewer-title" id="documentViewerTitle">Document viewer</div>
+            <button class="document-viewer-close" id="documentViewerClose" type="button">Close</button>
+          </div>
+          <div class="document-viewer-body">
+            <div class="viewer-meta-grid">
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Page</div>
+                <div class="viewer-meta-value" id="documentViewerPage">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Index</div>
+                <div class="viewer-meta-value" id="documentViewerIndex">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Section</div>
+                <div class="viewer-meta-value" id="documentViewerSection">n/a</div>
+              </div>
+              <div class="viewer-meta-card">
+                <div class="viewer-meta-label">Date</div>
+                <div class="viewer-meta-value" id="documentViewerDate">n/a</div>
+              </div>
+            </div>
+            <div>
+              <div class="viewer-meta-label">Reference</div>
+              <div class="viewer-meta-value" id="documentViewerReference">n/a</div>
+            </div>
+            <div>
+              <div class="viewer-meta-label">Retrieved Chunk</div>
+              <div class="viewer-excerpt" id="documentViewerExcerpt">No excerpt available.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       const SESSION_STORAGE_KEY = "knowledgeAgentSession";
       const API_BASE_URL = "http://localhost:5000";
+      const dashboard = document.querySelector(".dashboard");
       const navItems = document.querySelectorAll(".nav-item");
       const views = document.querySelectorAll("[data-view-panel]");
       const chatStages = document.querySelectorAll("[data-chat-stage]");
@@ -840,7 +1069,6 @@
       const newChatButton = document.getElementById("newChatButton");
       const ticketList = document.getElementById("ticketList");
       const historyList = document.getElementById("historyList");
-      const mailCards = document.querySelectorAll(".mail-card");
       const customerNamePill = document.getElementById("customerNamePill");
       const ticketOwnerPill = document.getElementById("ticketOwnerPill");
       const mailOwnerPill = document.getElementById("mailOwnerPill");
@@ -853,6 +1081,7 @@
       const emptyChatUpload = document.getElementById("emptyChatUpload");
       const emptyChatFiles = document.getElementById("emptyChatFiles");
       const emptyChatAskButton = document.getElementById("emptyChatAskButton");
+      const emptyChatShell = emptyChatInput.closest(".chat-input-shell");
       const workspaceTitle = document.getElementById("workspaceTitle");
       const workspaceSubtitle = document.getElementById("workspaceSubtitle");
       const workspaceTicketPill = document.getElementById("workspaceTicketPill");
@@ -861,6 +1090,18 @@
       const workspaceUpload = document.getElementById("workspaceUpload");
       const workspaceFiles = document.getElementById("workspaceFiles");
       const workspaceAskButton = document.getElementById("workspaceAskButton");
+      const documentViewer = document.getElementById("documentViewer");
+      const documentViewerFrame = document.getElementById("documentViewerFrame");
+      const documentViewerFallback = document.getElementById("documentViewerFallback");
+      const documentViewerTitle = document.getElementById("documentViewerTitle");
+      const documentViewerPage = document.getElementById("documentViewerPage");
+      const documentViewerIndex = document.getElementById("documentViewerIndex");
+      const documentViewerSection = document.getElementById("documentViewerSection");
+      const documentViewerDate = document.getElementById("documentViewerDate");
+      const documentViewerReference = document.getElementById("documentViewerReference");
+      const documentViewerExcerpt = document.getElementById("documentViewerExcerpt");
+      const documentViewerClose = document.getElementById("documentViewerClose");
+      const mailList = document.getElementById("mailList");
       const mailDetailSubject = document.getElementById("mailDetailSubject");
       const mailDetailFrom = document.getElementById("mailDetailFrom");
       const mailDetailDate = document.getElementById("mailDetailDate");
@@ -872,6 +1113,8 @@
       let sessionInfo = null;
       let currentTickets = [];
       let activeTicketId = null;
+      let currentMail = [];
+      let emptyComposerFiles = [];
 
       function setActiveView(viewName) {
         navItems.forEach((item) => {
@@ -881,6 +1124,8 @@
         views.forEach((view) => {
           view.classList.toggle("is-active", view.dataset.viewPanel === viewName);
         });
+
+        dashboard.classList.toggle("history-hidden", viewName !== "chat");
       }
 
       function showChatStage(stageName) {
@@ -964,7 +1209,9 @@
               role: data.role,
             }),
           );
+          sessionInfo = getSessionInfo();
           applyCustomerProfile(data);
+          await fetchMail();
         } catch (_error) {
           // Fall back to session values when the profile request fails.
         }
@@ -973,6 +1220,7 @@
       sessionInfo = getSessionInfo();
       customerName = sessionInfo.full_name || "Customer";
       hydrateCustomerProfile();
+      fetchMail();
 
       function formatDateLabel(value) {
         if (!value) {
@@ -986,6 +1234,25 @@
           month: "short",
           day: "numeric",
           year: "numeric",
+        }).format(date);
+      }
+
+      function formatDateTimeLabel(value) {
+        if (!value) {
+          return "n/a";
+        }
+        const normalized = String(value).replace(" ", "T");
+        const date = new Date(normalized);
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
         }).format(date);
       }
 
@@ -1074,6 +1341,61 @@
         });
       }
 
+      function renderMailInbox(mailItems) {
+        currentMail = mailItems;
+        mailList.innerHTML = "";
+
+        if (mailItems.length === 0) {
+          const emptyMail = document.createElement("div");
+          emptyMail.className = "setting-row";
+          emptyMail.innerHTML = `<div class="setting-label">No mail yet. Resolved tickets will appear here.</div>`;
+          mailList.appendChild(emptyMail);
+          return;
+        }
+
+        mailItems.forEach((mail) => {
+          const card = document.createElement("article");
+          card.className = "mail-card";
+          card.dataset.mailId = String(mail.id);
+          card.innerHTML = `
+            <div class="mail-subject">${mail.subject}</div>
+            <div class="mail-meta">${mail.sender} · Ticket #${mail.ticket_id}</div>
+          `;
+          card.addEventListener("click", () => {
+            mailList.querySelectorAll(".mail-card").forEach((mailCard) => {
+              mailCard.classList.toggle("is-active", mailCard === card);
+            });
+            mailDetailSubject.textContent = mail.subject;
+            mailDetailFrom.textContent = `From: ${mail.sender}`;
+            mailDetailDate.textContent = `Date: ${formatDateTimeLabel(mail.created_at)}`;
+            mailDetailBody.textContent = `${mail.body}\n\nTicket: #${mail.ticket_id}`;
+            showMailStage("detail");
+          });
+          mailList.appendChild(card);
+        });
+      }
+
+      async function fetchMail() {
+        if (!sessionInfo?.entity_id) {
+          renderMailInbox([]);
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/mail?customer_id=${encodeURIComponent(sessionInfo.entity_id)}`,
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            renderMailInbox([]);
+            return;
+          }
+          renderMailInbox(Array.isArray(data.mail) ? data.mail : []);
+        } catch (_error) {
+          renderMailInbox([]);
+        }
+      }
+
       async function fetchTickets() {
         if (!sessionInfo?.username) {
           renderTickets([]);
@@ -1101,39 +1423,193 @@
           const wrapper = document.createElement("div");
           wrapper.className = `message ${message.role}`;
           wrapper.innerHTML = `<div class="bubble"></div>`;
-          let text = message.content || "";
-          if (Array.isArray(message.attachments) && message.attachments.length > 0) {
-            text += `\n\nAttachments: ${message.attachments.join(", ")}`;
+          const text = message.content || "";
+          const bubble = wrapper.querySelector(".bubble");
+          if (message.role === "assistant") {
+            bubble.innerHTML = formatAssistantMessage(text);
+            const sourceAttachments = Array.isArray(message.attachments)
+              ? message.attachments.filter((item) => item && typeof item === "object" && item.kind === "source_reference")
+              : [];
+            if (sourceAttachments.length > 0) {
+              wrapper.appendChild(buildSourceReferencePanel(sourceAttachments));
+            }
+          } else {
+            bubble.textContent = text;
           }
-          wrapper.querySelector(".bubble").textContent = text;
           workspaceMessages.appendChild(wrapper);
         });
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function formatAssistantMessage(text) {
+        const withoutReferences = String(text || "").replace(/\n?References:\s*[^\n]*/i, "");
+        const escaped = escapeHtml(withoutReferences.trim());
+        const withBoldLabels = escaped.replace(
+          /(^|\n)(Answer:|Conflicts:)/g,
+          (_match, prefix, label) => `${prefix}<strong>${label}</strong>`
+        );
+        return withBoldLabels.replace(/\n/g, "<br>");
+      }
+
+      function buildSourceReferencePanel(sources) {
+        const panel = document.createElement("div");
+        panel.className = "source-reference-panel";
+        sources.forEach((source) => {
+          const chip = document.createElement("button");
+          chip.className = "source-reference-chip";
+          chip.type = "button";
+          chip.textContent = `${source.source_file} (page ${source.page ?? "n/a"}, index ${source.index ?? "n/a"})`;
+          chip.addEventListener("click", () => {
+            openDocumentViewer(source);
+          });
+          panel.appendChild(chip);
+        });
+        return panel;
+      }
+
+      function openDocumentViewer(source) {
+        const pageValue = source.page ?? "n/a";
+        const indexValue = source.index ?? "n/a";
+        documentViewerTitle.textContent = source.source_file || "Document viewer";
+        documentViewerPage.textContent = String(pageValue);
+        documentViewerIndex.textContent = String(indexValue);
+        documentViewerSection.textContent = source.heading_context || "n/a";
+        documentViewerDate.textContent = formatDateTimeLabel(source.document_date || source.uploaded_at || "");
+        documentViewerReference.textContent = `${source.source_file} (page ${pageValue}, index ${indexValue})`;
+        documentViewerExcerpt.textContent = source.text_excerpt || "No excerpt available.";
+
+        const fileType = String(source.file_type || "").toLowerCase();
+        const fileUrl = String(source.file_url || "");
+        const pageNumber = Number.parseInt(String(source.page ?? ""), 10);
+        if (fileUrl && fileType === "pdf") {
+          const pageSuffix = Number.isFinite(pageNumber) ? `#page=${pageNumber}` : "";
+          documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
+          documentViewerFrame.style.display = "block";
+          documentViewerFallback.classList.remove("is-visible");
+          documentViewerFallback.textContent = "";
+        } else {
+          documentViewerFrame.removeAttribute("src");
+          documentViewerFrame.style.display = "none";
+          documentViewerFallback.classList.add("is-visible");
+          documentViewerFallback.textContent = fileUrl
+            ? "Preview is only available for stored PDF files right now.\nUse the metadata on the right to inspect this source."
+            : "This source file is not currently available on disk for preview.\nThe retrieved chunk and metadata are still shown on the right.";
+        }
+
+        documentViewer.classList.add("is-open");
+      }
+
+      function closeDocumentViewer() {
+        documentViewer.classList.remove("is-open");
+        documentViewerFrame.removeAttribute("src");
+        documentViewerFallback.classList.remove("is-visible");
+        documentViewerFallback.textContent = "";
       }
 
       function scrollWorkspaceToBottom() {
         workspaceMessages.scrollTop = workspaceMessages.scrollHeight;
       }
 
-      function getSelectedFiles(input) {
-        return Array.from(input.files || []);
+      function getFileKey(file) {
+        return [file.name, file.size, file.lastModified, file.type].join("::");
       }
 
-      function renderSelectedFiles(input, container) {
-        const files = getSelectedFiles(input);
+      function mergeFiles(existingFiles, incomingFiles) {
+        const mergedFiles = [...existingFiles];
+        const seenKeys = new Set(existingFiles.map((file) => getFileKey(file)));
+        incomingFiles.forEach((file) => {
+          const fileKey = getFileKey(file);
+          if (!seenKeys.has(fileKey)) {
+            seenKeys.add(fileKey);
+            mergedFiles.push(file);
+          }
+        });
+        return mergedFiles;
+      }
+
+      function syncInputFiles(input, files) {
+        if (typeof DataTransfer !== "function") {
+          return;
+        }
+        const transfer = new DataTransfer();
+        files.forEach((file) => {
+          transfer.items.add(file);
+        });
+        input.files = transfer.files;
+      }
+
+      function renderSelectedFiles(files, container, onRemoveFile = null) {
         container.innerHTML = "";
         container.classList.toggle("is-empty", files.length === 0);
 
-        files.forEach((file) => {
+        files.forEach((file, index) => {
           const chip = document.createElement("div");
           chip.className = "file-chip";
-          chip.textContent = file.name;
+          if (typeof onRemoveFile === "function") {
+            chip.innerHTML = `
+              <span>${escapeHtml(file.name)}</span>
+              <button class="file-chip-remove" type="button" aria-label="Remove ${escapeHtml(file.name)}">×</button>
+            `;
+            chip.querySelector(".file-chip-remove").addEventListener("click", () => {
+              onRemoveFile(index);
+            });
+          } else {
+            chip.textContent = file.name;
+          }
           container.appendChild(chip);
         });
       }
 
-      function clearSelectedFiles(input, container) {
+      function updateEmptyComposerFiles(files) {
+        emptyComposerFiles = files;
+        syncInputFiles(emptyChatUpload, emptyComposerFiles);
+        renderSelectedFiles(emptyComposerFiles, emptyChatFiles, (index) => {
+          updateEmptyComposerFiles(emptyComposerFiles.filter((_file, fileIndex) => fileIndex !== index));
+        });
+      }
+
+      function appendSelectedFiles(input, currentFiles, updateFiles) {
+        const selectedFiles = Array.from(input.files || []);
+        updateFiles(mergeFiles(currentFiles, selectedFiles));
         input.value = "";
-        renderSelectedFiles(input, container);
+      }
+
+      function clearSelectedFiles(input, updateFiles) {
+        input.value = "";
+        updateFiles([]);
+      }
+
+      function setupDropZone(shell, input, currentFilesGetter, updateFiles) {
+        ["dragenter", "dragover"].forEach((eventName) => {
+          shell.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            shell.classList.add("is-drop-target");
+          });
+        });
+
+        ["dragleave", "dragend", "drop"].forEach((eventName) => {
+          shell.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            if (eventName !== "dragleave" || !shell.contains(event.relatedTarget)) {
+              shell.classList.remove("is-drop-target");
+            }
+          });
+        });
+
+        shell.addEventListener("drop", (event) => {
+          const droppedFiles = Array.from(event.dataTransfer?.files || []);
+          if (droppedFiles.length === 0) {
+            return;
+          }
+          updateFiles(mergeFiles(currentFilesGetter(), droppedFiles));
+          input.value = "";
+        });
       }
 
       async function sendWorkspaceMessage() {
@@ -1159,7 +1635,9 @@
             return;
           }
           workspaceInput.value = "";
-          clearSelectedFiles(workspaceUpload, workspaceFiles);
+          workspaceUpload.value = "";
+          workspaceFiles.innerHTML = "";
+          workspaceFiles.classList.add("is-empty");
           await fetchTickets();
           await openTicketChat(ticketId);
         } catch (_error) {
@@ -1192,7 +1670,7 @@
 
       async function createTicketFromComposer() {
         const text = emptyChatInput.value.trim();
-        const files = getSelectedFiles(emptyChatUpload);
+        const files = emptyComposerFiles;
         if (!text && files.length === 0) {
           emptyChatInput.focus();
           return;
@@ -1216,7 +1694,7 @@
             return;
           }
           emptyChatInput.value = "";
-          clearSelectedFiles(emptyChatUpload, emptyChatFiles);
+          clearSelectedFiles(emptyChatUpload, updateEmptyComposerFiles);
           await fetchTickets();
           await openTicketChat(data.ticket.id);
         } catch (_error) {
@@ -1231,6 +1709,7 @@
             showChatStage("empty");
           }
           if (item.dataset.view === "mail") {
+            void fetchMail();
             showMailStage("inbox");
           }
         });
@@ -1238,25 +1717,13 @@
 
       fetchTickets();
 
-      mailCards.forEach((card) => {
-        card.addEventListener("click", () => {
-          mailCards.forEach((mailCard) => {
-            mailCard.classList.toggle("is-active", mailCard === card);
-          });
-          mailDetailSubject.textContent = card.dataset.mailSubject;
-          mailDetailFrom.textContent = `From: ${card.dataset.mailFrom}`;
-          mailDetailDate.textContent = `Date: ${card.dataset.mailDate}`;
-          mailDetailBody.textContent = card.dataset.mailBody;
-          showMailStage("detail");
-        });
-      });
-
       emptyChatUpload.addEventListener("change", () => {
-        renderSelectedFiles(emptyChatUpload, emptyChatFiles);
+        appendSelectedFiles(emptyChatUpload, emptyComposerFiles, updateEmptyComposerFiles);
       });
 
       workspaceUpload.addEventListener("change", () => {
-        renderSelectedFiles(workspaceUpload, workspaceFiles);
+        const selectedFiles = Array.from(workspaceUpload.files || []);
+        renderSelectedFiles(selectedFiles, workspaceFiles);
       });
 
       emptyChatInput.addEventListener("keydown", (event) => {
@@ -1282,7 +1749,7 @@
       });
 
       mailBackButton.addEventListener("click", () => {
-        mailCards.forEach((card) => {
+        mailList.querySelectorAll(".mail-card").forEach((card) => {
           card.classList.remove("is-active");
         });
         showMailStage("inbox");
@@ -1296,9 +1763,12 @@
         renderTickets(currentTickets);
         customerGreeting.textContent = `Let's resolve your issue, ${customerName}`;
         emptyChatInput.value = "";
-        clearSelectedFiles(emptyChatUpload, emptyChatFiles);
+        clearSelectedFiles(emptyChatUpload, updateEmptyComposerFiles);
         emptyChatInput.focus();
       });
+
+      updateEmptyComposerFiles([]);
+      setupDropZone(emptyChatShell, emptyChatUpload, () => emptyComposerFiles, updateEmptyComposerFiles);
 
       function handleLogout() {
         window.localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -1307,6 +1777,12 @@
 
       sidebarLogoutButton.addEventListener("click", handleLogout);
       logoutButton.addEventListener("click", handleLogout);
+      documentViewerClose.addEventListener("click", closeDocumentViewer);
+      documentViewer.addEventListener("click", (event) => {
+        if (event.target === documentViewer) {
+          closeDocumentViewer();
+        }
+      });
     </script>
   </body>
 </html>

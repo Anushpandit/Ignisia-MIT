@@ -10,6 +10,7 @@ __pycache__/
 .python-version
 chroma_db/
 rag_eval_results.json
+backend/uploads/
 data/*
 !data/sample-*.md
 !data/sample-*-chunks.json

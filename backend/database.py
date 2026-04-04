@@ -68,12 +68,41 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
   ticket_id     INTEGER NOT NULL,
   customer_id   TEXT NOT NULL,
   filename      TEXT NOT NULL,
+  stored_path   TEXT NOT NULL DEFAULT '',
   content_type  TEXT NOT NULL DEFAULT '',
   file_type     TEXT NOT NULL DEFAULT '',
   parse_status  TEXT NOT NULL DEFAULT 'pending',
   error_message TEXT NOT NULL DEFAULT '',
   created_at    TEXT DEFAULT (datetime('now')),
   FOREIGN KEY(ticket_id) REFERENCES tickets(id)
+);
+"""
+
+
+CUSTOMER_MAIL_SCHEMA = """
+CREATE TABLE IF NOT EXISTS customer_mail (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id TEXT NOT NULL,
+  ticket_id   INTEGER NOT NULL,
+  sender      TEXT NOT NULL DEFAULT 'support@knowledgeagent.ai',
+  subject     TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  created_at  TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(ticket_id) REFERENCES tickets(id)
+);
+"""
+
+
+COMPANY_FILES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS company_files (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  filename      TEXT NOT NULL,
+  stored_path   TEXT NOT NULL DEFAULT '',
+  content_type  TEXT NOT NULL DEFAULT '',
+  file_type     TEXT NOT NULL DEFAULT '',
+  parse_status  TEXT NOT NULL DEFAULT 'pending',
+  error_message TEXT NOT NULL DEFAULT '',
+  created_at    TEXT DEFAULT (datetime('now'))
 );
 """
 
@@ -92,9 +121,30 @@ def initialize_database() -> None:
             connection.execute(TICKETS_SCHEMA)
             connection.execute(TICKET_MESSAGES_SCHEMA)
             connection.execute(UPLOADED_FILES_SCHEMA)
+            connection.execute(CUSTOMER_MAIL_SCHEMA)
+            connection.execute(COMPANY_FILES_SCHEMA)
+            _ensure_column(connection, "uploaded_files", "stored_path", "TEXT NOT NULL DEFAULT ''")
+            _ensure_column(connection, "company_files", "stored_path", "TEXT NOT NULL DEFAULT ''")
             connection.commit()
     except sqlite3.Error as error:
         raise RuntimeError("Failed to initialize database") from error
+
+
+def _ensure_column(
+    connection: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    column_definition: str,
+) -> None:
+    existing_columns = {
+        row[1]
+        for row in connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
+    if column_name in existing_columns:
+        return
+    connection.execute(
+        f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
+    )
 
 
 def create_customer(
@@ -183,6 +233,27 @@ def get_latest_user(role: str) -> Optional[sqlite3.Row]:
         raise RuntimeError("Failed to fetch latest user") from error
 
 
+def list_all_customers() -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT
+                    customers.*,
+                    COALESCE(COUNT(tickets.id), 0) AS ticket_count,
+                    COALESCE(SUM(CASE WHEN tickets.status != 'Closed' THEN 1 ELSE 0 END), 0) AS open_ticket_count
+                FROM customers
+                LEFT JOIN tickets
+                    ON tickets.customer_username = customers.username
+                GROUP BY customers.cust_id, customers.full_name, customers.username, customers.email, customers.password_hash, customers.created_at
+                ORDER BY LOWER(customers.full_name) ASC, customers.cust_id ASC
+                """
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list customers") from error
+
+
 def create_ticket(
     customer_id: str,
     customer_username: str,
@@ -253,6 +324,7 @@ def record_uploaded_file(
     ticket_id: int,
     customer_id: str,
     filename: str,
+    stored_path: str,
     content_type: str,
     file_type: str,
     parse_status: str,
@@ -263,15 +335,39 @@ def record_uploaded_file(
             connection.execute(
                 """
                 INSERT INTO uploaded_files (
-                    ticket_id, customer_id, filename, content_type, file_type, parse_status, error_message
+                    ticket_id, customer_id, filename, stored_path, content_type, file_type, parse_status, error_message
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (ticket_id, customer_id, filename, content_type, file_type, parse_status, error_message),
+                (ticket_id, customer_id, filename, stored_path, content_type, file_type, parse_status, error_message),
             )
             connection.commit()
     except sqlite3.Error as error:
         raise RuntimeError("Failed to record uploaded file") from error
+
+
+def record_company_file(
+    filename: str,
+    stored_path: str,
+    content_type: str,
+    file_type: str,
+    parse_status: str,
+    error_message: str = "",
+) -> None:
+    try:
+        with _get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO company_files (
+                    filename, stored_path, content_type, file_type, parse_status, error_message
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (filename, stored_path, content_type, file_type, parse_status, error_message),
+            )
+            connection.commit()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to record company file") from error
 
 
 def list_tickets_for_customer(customer_username: str) -> list[sqlite3.Row]:
@@ -356,10 +452,176 @@ def get_ticket_messages(ticket_id: int) -> list[sqlite3.Row]:
         raise RuntimeError("Failed to get ticket messages") from error
 
 
+def get_uploaded_file_by_id(file_id: int) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                "SELECT * FROM uploaded_files WHERE id = ?",
+                (file_id,),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to get uploaded file") from error
+
+
+def get_company_file_by_id(file_id: int) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                "SELECT * FROM company_files WHERE id = ?",
+                (file_id,),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to get company file") from error
+
+
+def add_customer_mail(
+    customer_id: str,
+    ticket_id: int,
+    subject: str,
+    body: str,
+    sender: str = "support@knowledgeagent.ai",
+) -> sqlite3.Row:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO customer_mail (customer_id, ticket_id, sender, subject, body)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (customer_id, ticket_id, sender, subject, body),
+            )
+            mail_id = cursor.lastrowid
+            connection.commit()
+            result = connection.execute(
+                "SELECT * FROM customer_mail WHERE id = ?",
+                (mail_id,),
+            ).fetchone()
+            if result is None:
+                raise RuntimeError("Created customer mail could not be retrieved")
+            return result
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to add customer mail") from error
+
+
+def list_customer_mail(customer_id: str) -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM customer_mail
+                WHERE customer_id = ?
+                ORDER BY datetime(created_at) DESC, id DESC
+                """,
+                (customer_id,),
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list customer mail") from error
+
+
+def list_company_files() -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM company_files
+                ORDER BY datetime(created_at) DESC, id DESC
+                """
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list company files") from error
+
+
+def delete_company_file(file_id: int) -> bool:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute("DELETE FROM company_files WHERE id = ?", (file_id,))
+            connection.commit()
+            return cursor.rowcount > 0
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to delete company file") from error
+
+
+def find_latest_uploaded_file(customer_id: str, filename: str) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM uploaded_files
+                WHERE customer_id = ? AND filename = ? AND parse_status = 'parsed'
+                ORDER BY datetime(created_at) DESC, id DESC
+                LIMIT 1
+                """,
+                (customer_id, filename),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to find uploaded file") from error
+
+
+def find_latest_company_file(filename: str) -> Optional[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM company_files
+                WHERE filename = ? AND parse_status = 'parsed'
+                ORDER BY datetime(created_at) DESC, id DESC
+                LIMIT 1
+                """,
+                (filename,),
+            )
+            return cursor.fetchone()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to find company file") from error
+
+
+def list_uploaded_files_for_ticket(ticket_id: int) -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM uploaded_files
+                WHERE ticket_id = ?
+                ORDER BY id ASC
+                """,
+                (ticket_id,),
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list uploaded files") from error
+
+
+def list_uploaded_files_for_customer(customer_id: str) -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM uploaded_files
+                WHERE customer_id = ?
+                ORDER BY datetime(created_at) DESC, id DESC
+                """,
+                (customer_id,),
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list uploaded files for customer") from error
+
+
 def delete_ticket(ticket_id: int) -> bool:
     try:
         with _get_connection() as connection:
-            cursor = connection.execute("DELETE FROM uploaded_files WHERE ticket_id = ?", (ticket_id,))
+            connection.execute("DELETE FROM customer_mail WHERE ticket_id = ?", (ticket_id,))
+            connection.execute("DELETE FROM uploaded_files WHERE ticket_id = ?", (ticket_id,))
             connection.execute("DELETE FROM ticket_messages WHERE ticket_id = ?", (ticket_id,))
             ticket_cursor = connection.execute("DELETE FROM tickets WHERE id = ?", (ticket_id,))
             connection.commit()

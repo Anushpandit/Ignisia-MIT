@@ -1,6 +1,6 @@
 # Ignisia-MIT
 
-Multi-Format Knowledge Retrieval Agent for SME Operations.
+Problem Statement 1 : Multi-Format Knowledge Retrieval Agent for SME Operations.
 
 Ignisia-MIT is a retrieval-focused MVP for teams that need to search across fragmented business knowledge stored in PDFs, emails, spreadsheets, text files, and scanned images. The project now includes the full local retrieval pipeline:
 
