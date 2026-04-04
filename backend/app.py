@@ -18,6 +18,7 @@ from chunker import chunk_documents
 from database import (
     add_ticket_message,
     add_customer_mail,
+    create_support_action,
     create_ticket,
     create_customer,
     delete_ticket,
@@ -37,6 +38,7 @@ from database import (
     list_customer_mail,
     list_uploaded_files_for_ticket,
     list_uploaded_files_for_customer,
+    list_support_actions,
     list_all_tickets,
     list_tickets_for_customer,
     record_company_file,
@@ -91,6 +93,9 @@ CORS(
             "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
         },
         r"/tickets/*": {
+            "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
+        },
+        r"/support-actions": {
             "origins": ["http://localhost:3000", "http://127.0.0.1:5500"],
         },
     },
@@ -312,6 +317,36 @@ def _serialize_customer_mail(mail) -> dict[str, str | int]:
         "subject": cast(str, mail["subject"]),
         "body": cast(str, mail["body"]),
         "created_at": cast(str, mail["created_at"]),
+    }
+
+
+def _load_json_list(value: object) -> list[object]:
+    if not isinstance(value, str) or not value.strip():
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def _serialize_support_action(action) -> dict[str, object]:
+    return {
+        "id": cast(int, action["id"]),
+        "ticket_id": cast(int, action["ticket_id"]),
+        "customer_id": cast(str, action["customer_id"]),
+        "customer_name": cast(str, action["customer_name"]),
+        "customer_username": cast(str, action["customer_username"]),
+        "customer_email": cast(str, action["customer_email"]),
+        "category": cast(str, action["category"]),
+        "issue_summary": cast(str, action["issue_summary"]),
+        "relevant_context": cast(str, action["relevant_context"]),
+        "reasoning": cast(str, action["reasoning"]),
+        "suggested_resolution": cast(str, action["suggested_resolution"]),
+        "actions": _load_json_list(action["actions_json"]),
+        "documents": _load_json_list(action["documents_json"]),
+        "references": _load_json_list(action["references_json"]),
+        "created_at": cast(str, action["created_at"]),
     }
 
 
@@ -868,6 +903,21 @@ def list_tickets_route():
         return jsonify({"success": False, "message": "Internal server error"}), 500
 
 
+@app.get("/support-actions")
+def support_actions_route():
+    try:
+        return jsonify(
+            {
+                "success": True,
+                "actions": [_serialize_support_action(item) for item in list_support_actions()],
+            }
+        ), 200
+    except RuntimeError:
+        return jsonify({"success": False, "message": "Database operation failed"}), 400
+    except Exception:
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+
 @app.get("/tickets/<int:ticket_id>/messages")
 def ticket_messages_route(ticket_id: int):
     try:
@@ -971,6 +1021,10 @@ def uploaded_file_route(file_id: int):
 @app.post("/tickets/<int:ticket_id>/close")
 def close_ticket_route(ticket_id: int):
     try:
+        payload = request.get_json(silent=True)
+        if payload is not None and not isinstance(payload, dict):
+            return jsonify({"success": False, "message": "Invalid JSON body"}), 400
+
         ticket = get_ticket(ticket_id)
         if ticket is None:
             return jsonify({"success": False, "message": "Ticket not found"}), 404
@@ -983,6 +1037,33 @@ def close_ticket_route(ticket_id: int):
 
         customer_name = cast(str, ticket["customer_name"])
         ticket_subject = cast(str, ticket["subject"])
+        action_created = None
+
+        if isinstance(payload, dict):
+            action_summary = _normalize_text(payload.get("issue_summary"))
+            if action_summary:
+                raw_action_items = payload.get("actions")
+                raw_documents = payload.get("documents")
+                raw_references = payload.get("references")
+                action_items = raw_action_items if isinstance(raw_action_items, list) else []
+                documents = raw_documents if isinstance(raw_documents, list) else []
+                references = raw_references if isinstance(raw_references, list) else []
+                action_created = create_support_action(
+                    ticket_id=ticket_id,
+                    customer_id=cast(str, ticket["customer_id"]),
+                    customer_name=customer_name,
+                    customer_username=cast(str, ticket["customer_username"]),
+                    customer_email=_normalize_text(payload.get("customer_email")),
+                    category=_normalize_text(payload.get("category")),
+                    issue_summary=action_summary,
+                    relevant_context=_normalize_text(payload.get("relevant_context")),
+                    reasoning=_normalize_text(payload.get("reasoning")),
+                    suggested_resolution=_normalize_text(payload.get("suggested_resolution")),
+                    actions_json=json.dumps(action_items),
+                    documents_json=json.dumps(documents),
+                    references_json=json.dumps(references),
+                )
+
         add_customer_mail(
             customer_id=cast(str, ticket["customer_id"]),
             ticket_id=ticket_id,
@@ -997,7 +1078,13 @@ def close_ticket_route(ticket_id: int):
             ),
         )
 
-        return jsonify({"success": True, "ticket": _serialize_ticket(updated_ticket)}), 200
+        response_payload: dict[str, object] = {
+            "success": True,
+            "ticket": _serialize_ticket(updated_ticket),
+        }
+        if action_created is not None:
+            response_payload["support_action"] = _serialize_support_action(action_created)
+        return jsonify(response_payload), 200
     except RuntimeError:
         return jsonify({"success": False, "message": "Database operation failed"}), 400
     except Exception:

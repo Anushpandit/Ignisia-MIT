@@ -107,6 +107,28 @@ CREATE TABLE IF NOT EXISTS company_files (
 """
 
 
+SUPPORT_ACTIONS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS support_actions (
+  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_id            INTEGER NOT NULL,
+  customer_id          TEXT NOT NULL,
+  customer_name        TEXT NOT NULL,
+  customer_username    TEXT NOT NULL DEFAULT '',
+  customer_email       TEXT NOT NULL DEFAULT '',
+  category             TEXT NOT NULL DEFAULT '',
+  issue_summary        TEXT NOT NULL DEFAULT '',
+  relevant_context     TEXT NOT NULL DEFAULT '',
+  reasoning            TEXT NOT NULL DEFAULT '',
+  suggested_resolution TEXT NOT NULL DEFAULT '',
+  actions_json         TEXT NOT NULL DEFAULT '[]',
+  documents_json       TEXT NOT NULL DEFAULT '[]',
+  references_json      TEXT NOT NULL DEFAULT '[]',
+  created_at           TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(ticket_id) REFERENCES tickets(id)
+);
+"""
+
+
 def _get_connection() -> sqlite3.Connection:
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
@@ -123,6 +145,7 @@ def initialize_database() -> None:
             connection.execute(UPLOADED_FILES_SCHEMA)
             connection.execute(CUSTOMER_MAIL_SCHEMA)
             connection.execute(COMPANY_FILES_SCHEMA)
+            connection.execute(SUPPORT_ACTIONS_SCHEMA)
             _ensure_column(connection, "uploaded_files", "stored_path", "TEXT NOT NULL DEFAULT ''")
             _ensure_column(connection, "company_files", "stored_path", "TEXT NOT NULL DEFAULT ''")
             connection.commit()
@@ -547,6 +570,87 @@ def delete_company_file(file_id: int) -> bool:
         raise RuntimeError("Failed to delete company file") from error
 
 
+def create_support_action(
+    *,
+    ticket_id: int,
+    customer_id: str,
+    customer_name: str,
+    customer_username: str,
+    customer_email: str,
+    category: str,
+    issue_summary: str,
+    relevant_context: str,
+    reasoning: str,
+    suggested_resolution: str,
+    actions_json: str = "[]",
+    documents_json: str = "[]",
+    references_json: str = "[]",
+) -> sqlite3.Row:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO support_actions (
+                    ticket_id,
+                    customer_id,
+                    customer_name,
+                    customer_username,
+                    customer_email,
+                    category,
+                    issue_summary,
+                    relevant_context,
+                    reasoning,
+                    suggested_resolution,
+                    actions_json,
+                    documents_json,
+                    references_json
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticket_id,
+                    customer_id,
+                    customer_name,
+                    customer_username,
+                    customer_email,
+                    category,
+                    issue_summary,
+                    relevant_context,
+                    reasoning,
+                    suggested_resolution,
+                    actions_json,
+                    documents_json,
+                    references_json,
+                ),
+            )
+            action_id = cursor.lastrowid
+            connection.commit()
+            result = connection.execute(
+                "SELECT * FROM support_actions WHERE id = ?",
+                (action_id,),
+            ).fetchone()
+            if result is None:
+                raise RuntimeError("Created support action could not be retrieved")
+            return result
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to create support action") from error
+
+
+def list_support_actions() -> list[sqlite3.Row]:
+    try:
+        with _get_connection() as connection:
+            cursor = connection.execute(
+                """
+                SELECT *
+                FROM support_actions
+                ORDER BY datetime(created_at) DESC, id DESC
+                """
+            )
+            return cursor.fetchall()
+    except sqlite3.Error as error:
+        raise RuntimeError("Failed to list support actions") from error
+
+
 def find_latest_uploaded_file(customer_id: str, filename: str) -> Optional[sqlite3.Row]:
     try:
         with _get_connection() as connection:
@@ -620,6 +724,7 @@ def list_uploaded_files_for_customer(customer_id: str) -> list[sqlite3.Row]:
 def delete_ticket(ticket_id: int) -> bool:
     try:
         with _get_connection() as connection:
+            connection.execute("DELETE FROM support_actions WHERE ticket_id = ?", (ticket_id,))
             connection.execute("DELETE FROM customer_mail WHERE ticket_id = ?", (ticket_id,))
             connection.execute("DELETE FROM uploaded_files WHERE ticket_id = ?", (ticket_id,))
             connection.execute("DELETE FROM ticket_messages WHERE ticket_id = ?", (ticket_id,))

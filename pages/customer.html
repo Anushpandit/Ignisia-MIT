@@ -487,9 +487,13 @@
       }
 
       .document-viewer-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-right: 1px solid var(--border);
         background: #e5e7eb;
         min-height: 0;
+        overflow: auto;
       }
 
       .document-viewer-frame {
@@ -497,6 +501,13 @@
         height: 100%;
         border: 0;
         background: #ffffff;
+      }
+
+      .document-viewer-image {
+        display: none;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
 
       .document-viewer-fallback {
@@ -1019,6 +1030,7 @@
       <div class="document-viewer-shell">
         <div class="document-viewer-preview">
           <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+          <img class="document-viewer-image" id="documentViewerImage" alt="Document preview" />
           <div class="document-viewer-fallback" id="documentViewerFallback"></div>
         </div>
         <div class="document-viewer-meta">
@@ -1092,6 +1104,7 @@
       const workspaceAskButton = document.getElementById("workspaceAskButton");
       const documentViewer = document.getElementById("documentViewer");
       const documentViewerFrame = document.getElementById("documentViewerFrame");
+      const documentViewerImage = document.getElementById("documentViewerImage");
       const documentViewerFallback = document.getElementById("documentViewerFallback");
       const documentViewerTitle = document.getElementById("documentViewerTitle");
       const documentViewerPage = document.getElementById("documentViewerPage");
@@ -1491,14 +1504,26 @@
           const pageSuffix = Number.isFinite(pageNumber) ? `#page=${pageNumber}` : "";
           documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
           documentViewerFrame.style.display = "block";
+          documentViewerImage.removeAttribute("src");
+          documentViewerImage.style.display = "none";
+          documentViewerFallback.classList.remove("is-visible");
+          documentViewerFallback.textContent = "";
+        } else if (fileUrl && ["image", "png", "jpg", "jpeg"].includes(fileType)) {
+          documentViewerFrame.removeAttribute("src");
+          documentViewerFrame.style.display = "none";
+          documentViewerImage.src = fileUrl;
+          documentViewerImage.alt = source.source_file || "Document preview";
+          documentViewerImage.style.display = "block";
           documentViewerFallback.classList.remove("is-visible");
           documentViewerFallback.textContent = "";
         } else {
           documentViewerFrame.removeAttribute("src");
           documentViewerFrame.style.display = "none";
+          documentViewerImage.removeAttribute("src");
+          documentViewerImage.style.display = "none";
           documentViewerFallback.classList.add("is-visible");
           documentViewerFallback.textContent = fileUrl
-            ? "Preview is only available for stored PDF files right now.\nUse the metadata on the right to inspect this source."
+            ? "Preview is only available for stored PDF and image files right now.\nUse the metadata on the right to inspect this source."
             : "This source file is not currently available on disk for preview.\nThe retrieved chunk and metadata are still shown on the right.";
         }
 
@@ -1508,6 +1533,8 @@
       function closeDocumentViewer() {
         documentViewer.classList.remove("is-open");
         documentViewerFrame.removeAttribute("src");
+        documentViewerImage.removeAttribute("src");
+        documentViewerImage.style.display = "none";
         documentViewerFallback.classList.remove("is-visible");
         documentViewerFallback.textContent = "";
       }

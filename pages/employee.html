@@ -416,9 +416,13 @@
       }
 
       .document-viewer-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-right: 1px solid var(--border);
         background: #e5e7eb;
         min-height: 0;
+        overflow: auto;
       }
 
       .document-viewer-frame {
@@ -426,6 +430,13 @@
         height: 100%;
         border: 0;
         background: #ffffff;
+      }
+
+      .document-viewer-image {
+        display: none;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
 
       .document-viewer-fallback {
@@ -574,6 +585,7 @@
       }
 
       .ticket-card,
+      .action-card,
       .setting-row,
       .source-card,
       .ticket-summary {
@@ -589,8 +601,105 @@
         cursor: pointer;
       }
 
+      .action-card {
+        padding: 16px;
+      }
+
       .ticket-card.is-active {
         background: var(--active);
+      }
+
+      .action-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .action-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .action-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .action-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .action-block {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fcfcfd;
+      }
+
+      .action-block-wide {
+        grid-column: 1 / -1;
+      }
+
+      .action-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .action-value {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .action-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        line-height: 1.6;
+      }
+
+      .action-item-index {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--user-bubble);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .action-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .action-chip {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--text);
+        padding: 7px 11px;
+        font-size: 12px;
+        cursor: pointer;
       }
 
       .ticket-stage {
@@ -1051,6 +1160,7 @@
           <button class="nav-item is-active" data-view="chat">Chat</button>
           <button class="nav-item" data-view="customers">Customers</button>
           <button class="nav-item" data-view="tickets">Tickets</button>
+          <button class="nav-item" data-view="actions">Actions</button>
           <button class="nav-item" data-view="settings">Settings</button>
         </nav>
 
@@ -1153,6 +1263,17 @@
             src="/pages/crm_support_ticket_agent.html"
             title="Customers"
           ></iframe>
+        </section>
+
+        <section class="view" data-view-panel="actions">
+          <header class="main-header">
+            <div class="main-header-left">
+              <div class="main-title">Actions</div>
+            </div>
+          </header>
+          <div class="content-scroll">
+            <div class="panel-stack" id="actionsList"></div>
+          </div>
         </section>
 
         <section class="view" data-view-panel="settings">
@@ -1323,6 +1444,7 @@
       <div class="document-viewer-shell">
         <div class="document-viewer-preview">
           <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+          <img class="document-viewer-image" id="documentViewerImage" alt="Document preview" />
           <div class="document-viewer-fallback" id="documentViewerFallback"></div>
         </div>
         <div class="document-viewer-meta">
@@ -1385,6 +1507,7 @@
       const newChatButton = document.getElementById("newChatButton");
       const ticketList = document.getElementById("ticketList");
       const historyList = document.getElementById("historyList");
+      const actionsList = document.getElementById("actionsList");
       const logoutButton = document.getElementById("logoutButton");
       const settingsLogoutButton = document.getElementById("settingsLogoutButton");
       const profileEmployeeIdValue = document.getElementById("profileEmployeeIdValue");
@@ -1412,6 +1535,7 @@
       const previewDate = document.getElementById("previewDate");
       const documentViewer = document.getElementById("documentViewer");
       const documentViewerFrame = document.getElementById("documentViewerFrame");
+      const documentViewerImage = document.getElementById("documentViewerImage");
       const documentViewerFallback = document.getElementById("documentViewerFallback");
       const documentViewerTitle = document.getElementById("documentViewerTitle");
       const documentViewerPage = document.getElementById("documentViewerPage");
@@ -1434,6 +1558,7 @@
       let previousSidebarMode = "sources";
       let activeTicket = null;
       let currentTickets = [];
+      let currentSupportActions = [];
 
       function getSessionProfile() {
         try {
@@ -1595,6 +1720,10 @@
         if (viewName === "tickets") {
           showTicketStage("list");
         }
+
+        if (viewName === "actions") {
+          void fetchSupportActions();
+        }
       }
 
       function showSidebarMode(modeName) {
@@ -1681,6 +1810,187 @@
           });
           historyList.appendChild(historyCard);
         });
+      }
+
+      function renderSupportActions(actions) {
+        currentSupportActions = actions;
+        actionsList.innerHTML = "";
+
+        if (!actions.length) {
+          const emptyActions = document.createElement("div");
+          emptyActions.className = "setting-row";
+          emptyActions.innerHTML = `<div class="setting-label">No submitted support actions yet.</div>`;
+          actionsList.appendChild(emptyActions);
+          return;
+        }
+
+        actions.forEach((action) => {
+          const actionCard = document.createElement("section");
+          actionCard.className = "action-card";
+
+          const actionItems = Array.isArray(action.actions) ? action.actions : [];
+          const documents = Array.isArray(action.documents) ? action.documents : [];
+          const references = Array.isArray(action.references) ? action.references : [];
+
+          actionCard.innerHTML = `
+            <div class="action-header">
+              <div>
+                <div class="action-title">${escapeHtml(action.customer_name)} · Ticket #${action.ticket_id}</div>
+                <div class="action-meta">${escapeHtml(formatDateTimeLabel(action.created_at))} · ${escapeHtml(action.category || "Uncategorized")}</div>
+              </div>
+              <span class="badge badge-pending">Support action</span>
+            </div>
+            <div class="action-grid">
+              <div class="action-block">
+                <span class="action-label">Customer ID</span>
+                <div class="action-value">${escapeHtml(action.customer_id || "n/a")}</div>
+              </div>
+              <div class="action-block">
+                <span class="action-label">Username</span>
+                <div class="action-value">${escapeHtml(action.customer_username || "n/a")}</div>
+              </div>
+              <div class="action-block">
+                <span class="action-label">Customer Name</span>
+                <div class="action-value">${escapeHtml(action.customer_name || "n/a")}</div>
+              </div>
+              <div class="action-block">
+                <span class="action-label">Email</span>
+                <div class="action-value">${escapeHtml(action.customer_email || "n/a")}</div>
+              </div>
+              <div class="action-block action-block-wide">
+                <span class="action-label">Issue Summary</span>
+                <div class="action-value">${escapeHtml(action.issue_summary || "n/a")}</div>
+              </div>
+              <div class="action-block action-block-wide">
+                <span class="action-label">Relevant Context</span>
+                <div class="action-value">${escapeHtml(action.relevant_context || "n/a")}</div>
+              </div>
+              <div class="action-block action-block-wide">
+                <span class="action-label">Reasoning</span>
+                <div class="action-value">${escapeHtml(action.reasoning || "n/a")}</div>
+              </div>
+              <div class="action-block action-block-wide">
+                <span class="action-label">Suggested Resolution</span>
+                <div class="action-value">${escapeHtml(action.suggested_resolution || "n/a")}</div>
+              </div>
+              <div class="action-block action-block-wide">
+                <span class="action-label">Actions</span>
+                <div class="action-list">
+                  ${
+                    actionItems.length
+                      ? actionItems
+                          .map(
+                            (item, index) => `
+                      <div class="action-item">
+                        <span class="action-item-index">${index + 1}</span>
+                        <span>${escapeHtml(String(item || ""))}</span>
+                      </div>
+                    `
+                          )
+                          .join("")
+                      : `<div class="action-value">No action steps captured.</div>`
+                  }
+                </div>
+              </div>
+              <div class="action-block">
+                <span class="action-label">Docs</span>
+                <div class="action-chip-row">
+                  ${
+                    documents.length
+                      ? documents
+                          .map(
+                            (doc, index) => `
+                      <button
+                        class="action-chip"
+                        type="button"
+                        data-action-doc="${action.id}"
+                        data-doc-index="${index}"
+                      >
+                        ${escapeHtml(doc.filename || `Document ${index + 1}`)}
+                      </button>
+                    `
+                          )
+                          .join("")
+                      : `<div class="action-value">No documents linked.</div>`
+                  }
+                </div>
+              </div>
+              <div class="action-block">
+                <span class="action-label">References</span>
+                <div class="action-chip-row">
+                  ${
+                    references.length
+                      ? references
+                          .map(
+                            (reference, index) => `
+                      <button
+                        class="action-chip"
+                        type="button"
+                        data-action-ref="${action.id}"
+                        data-ref-index="${index}"
+                      >
+                        ${escapeHtml(reference.source_file || `Reference ${index + 1}`)}
+                      </button>
+                    `
+                          )
+                          .join("")
+                      : `<div class="action-value">No references linked.</div>`
+                  }
+                </div>
+              </div>
+            </div>
+          `;
+          actionsList.appendChild(actionCard);
+        });
+
+        actionsList.querySelectorAll("[data-action-doc]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const actionId = Number(button.dataset.actionDoc);
+            const docIndex = Number(button.dataset.docIndex);
+            const selectedAction = currentSupportActions.find((item) => Number(item.id) === actionId);
+            const doc = selectedAction?.documents?.[docIndex];
+            if (!doc) {
+              return;
+            }
+            openDocumentViewer({
+              source_file: doc.filename,
+              file_type: doc.file_type,
+              file_url: doc.file_url,
+              page: "",
+              index: "",
+              heading_context: `Ticket #${doc.ticket_id || "n/a"}`,
+              uploaded_at: doc.created_at,
+              text_excerpt: `${doc.file_type || "unknown"} · ${doc.parse_status || "n/a"}`,
+            });
+          });
+        });
+
+        actionsList.querySelectorAll("[data-action-ref]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const actionId = Number(button.dataset.actionRef);
+            const refIndex = Number(button.dataset.refIndex);
+            const selectedAction = currentSupportActions.find((item) => Number(item.id) === actionId);
+            const reference = selectedAction?.references?.[refIndex];
+            if (!reference) {
+              return;
+            }
+            openDocumentViewer(reference);
+          });
+        });
+      }
+
+      async function fetchSupportActions() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/support-actions`);
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            renderSupportActions([]);
+            return;
+          }
+          renderSupportActions(Array.isArray(data.actions) ? data.actions : []);
+        } catch (_error) {
+          renderSupportActions([]);
+        }
       }
 
       async function fetchTickets() {
@@ -1773,14 +2083,26 @@
           const pageSuffix = Number.isFinite(pageNumber) ? `#page=${pageNumber}` : "";
           documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
           documentViewerFrame.style.display = "block";
+          documentViewerImage.removeAttribute("src");
+          documentViewerImage.style.display = "none";
+          documentViewerFallback.classList.remove("is-visible");
+          documentViewerFallback.textContent = "";
+        } else if (fileUrl && ["image", "png", "jpg", "jpeg"].includes(fileType)) {
+          documentViewerFrame.removeAttribute("src");
+          documentViewerFrame.style.display = "none";
+          documentViewerImage.src = fileUrl;
+          documentViewerImage.alt = source.source_file || "Document preview";
+          documentViewerImage.style.display = "block";
           documentViewerFallback.classList.remove("is-visible");
           documentViewerFallback.textContent = "";
         } else {
           documentViewerFrame.removeAttribute("src");
           documentViewerFrame.style.display = "none";
+          documentViewerImage.removeAttribute("src");
+          documentViewerImage.style.display = "none";
           documentViewerFallback.classList.add("is-visible");
           documentViewerFallback.textContent = fileUrl
-            ? "Preview is only available for stored PDF files right now.\nUse the metadata on the right to inspect this source."
+            ? "Preview is only available for stored PDF and image files right now.\nUse the metadata on the right to inspect this source."
             : "This source file is not currently available on disk for preview.\nThe retrieved chunk and metadata are still shown on the right.";
         }
 
@@ -1790,6 +2112,8 @@
       function closeDocumentViewer() {
         documentViewer.classList.remove("is-open");
         documentViewerFrame.removeAttribute("src");
+        documentViewerImage.removeAttribute("src");
+        documentViewerImage.style.display = "none";
         documentViewerFallback.classList.remove("is-visible");
         documentViewerFallback.textContent = "";
       }
@@ -1918,6 +2242,16 @@
       });
 
       fetchTickets();
+      fetchSupportActions();
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) {
+          return;
+        }
+        if (event.data?.type === "support-action-created") {
+          void fetchSupportActions();
+        }
+      });
 
       workspaceAskButton.addEventListener("click", () => {
         void sendWorkspaceMessage();

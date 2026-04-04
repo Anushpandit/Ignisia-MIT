@@ -313,15 +313,25 @@ body {
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
 }
 .document-viewer-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-right: 1px solid var(--color-border-tertiary);
   background: #e5e7eb;
   min-height: 0;
+  overflow: auto;
 }
 .document-viewer-frame {
   width: 100%;
   height: 100%;
   border: 0;
   background: #ffffff;
+}
+.document-viewer-image {
+  display: none;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 .document-viewer-fallback {
   height: 100%;
@@ -439,6 +449,7 @@ body {
   <div class="document-viewer-shell">
     <div class="document-viewer-preview">
       <iframe class="document-viewer-frame" id="documentViewerFrame" title="Document preview"></iframe>
+      <img class="document-viewer-image" id="documentViewerImage" alt="Document preview" />
       <div class="document-viewer-fallback" id="documentViewerFallback"></div>
     </div>
     <div class="document-viewer-meta">
@@ -487,9 +498,11 @@ let selectedClient = null;
 let filteredCustomers = [];
 let activeTab = 'profile';
 let agentRunning = false;
+let latestAgentSources = [];
 const customerActivityCache = new Map();
 const documentViewer = document.getElementById('documentViewer');
 const documentViewerFrame = document.getElementById('documentViewerFrame');
+const documentViewerImage = document.getElementById('documentViewerImage');
 const documentViewerFallback = document.getElementById('documentViewerFallback');
 const documentViewerTitle = document.getElementById('documentViewerTitle');
 const documentViewerScope = document.getElementById('documentViewerScope');
@@ -517,14 +530,26 @@ function openDocumentViewer(options) {
     const pageSuffix = options.page ? `#page=${options.page}` : '';
     documentViewerFrame.src = `${fileUrl}${pageSuffix}`;
     documentViewerFrame.style.display = 'block';
+    documentViewerImage.removeAttribute('src');
+    documentViewerImage.style.display = 'none';
+    documentViewerFallback.classList.remove('is-visible');
+    documentViewerFallback.textContent = '';
+  } else if (fileUrl && ['image', 'png', 'jpg', 'jpeg'].includes(fileType)) {
+    documentViewerFrame.removeAttribute('src');
+    documentViewerFrame.style.display = 'none';
+    documentViewerImage.src = fileUrl;
+    documentViewerImage.alt = options.title || 'Document preview';
+    documentViewerImage.style.display = 'block';
     documentViewerFallback.classList.remove('is-visible');
     documentViewerFallback.textContent = '';
   } else {
     documentViewerFrame.removeAttribute('src');
     documentViewerFrame.style.display = 'none';
+    documentViewerImage.removeAttribute('src');
+    documentViewerImage.style.display = 'none';
     documentViewerFallback.classList.add('is-visible');
     documentViewerFallback.textContent = fileUrl
-      ? `Preview is only available for PDF files right now.${pageValue ? `\nThis reference points to${pageValue}.` : ''}`
+      ? `Preview is only available for PDF and image files right now.${pageValue ? `\nThis reference points to${pageValue}.` : ''}`
       : 'This file is not currently available for preview.';
   }
 
@@ -770,6 +795,8 @@ function openDocumentViewerFromFile(file) {
 function closeDocumentViewer() {
   documentViewer.classList.remove('is-open');
   documentViewerFrame.removeAttribute('src');
+  documentViewerImage.removeAttribute('src');
+  documentViewerImage.style.display = 'none';
   documentViewerFallback.classList.remove('is-visible');
   documentViewerFallback.textContent = '';
 }
@@ -1035,6 +1062,7 @@ async function runAgent() {
   const reasoning = autofill.reasoning || '';
   const suggestedResolution = autofill.suggested_resolution || resolutionForCategory(category);
   const sources = Array.isArray(payload.sources) ? payload.sources : [];
+  latestAgentSources = sources;
 
   document.getElementById('agentLog').textContent = 'Agent complete — the form now includes history, reasoning, and suggested next steps.';
   setAgentVisualState('done');
@@ -1074,16 +1102,38 @@ async function typeField(id, value, isSelect, animate) {
 }
 
 function clearTicket() {
+  latestAgentSources = [];
   renderTicket();
+}
+
+function deriveSupportActions(text) {
+  return String(text || '')
+    .split(/\n+/)
+    .map((line) => line.trim().replace(/^[-*]\s*/, ''))
+    .flatMap((line) => line.split(/(?:\.\s+|\;\s+)/))
+    .map((line) => line.trim())
+    .filter((line) => line.length > 12)
+    .slice(0, 6);
 }
 
 async function submitTicket() {
   if (!selectedClient) return;
 
   const ticketId = document.getElementById('f-ticket-id')?.value || '';
+  const category = document.getElementById('f-category')?.value || '';
+  const issueSummary = document.getElementById('f-issue')?.value.trim() || '';
+  const relevantContext = document.getElementById('f-context')?.value.trim() || '';
+  const reasoning = document.getElementById('f-reasoning')?.value.trim() || '';
+  const suggestedResolution = document.getElementById('f-resolution')?.value.trim() || '';
   const submitButton = document.getElementById('btnSubmit');
   if (!ticketId) {
     document.getElementById('agentLog').textContent = 'Select an open ticket before submitting.';
+    document.getElementById('agentStatus').textContent = 'Waiting';
+    document.getElementById('agentStatus').style.color = '#854F0B';
+    return;
+  }
+  if (!issueSummary || !suggestedResolution) {
+    document.getElementById('agentLog').textContent = 'Complete the issue summary and suggested resolution before submitting.';
     document.getElementById('agentStatus').textContent = 'Waiting';
     document.getElementById('agentStatus').style.color = '#854F0B';
     return;
@@ -1093,11 +1143,49 @@ async function submitTicket() {
   submitButton.textContent = 'Submitting...';
 
   try {
+    const activity = customerActivityCache.get(selectedClient.customer_id) || { uploadedFiles: [] };
+    const supportActions = deriveSupportActions(suggestedResolution);
+    const documents = Array.isArray(activity.uploadedFiles)
+      ? activity.uploadedFiles.map((file) => ({
+          id: file.id,
+          ticket_id: file.ticket_id,
+          filename: file.filename,
+          file_type: file.file_type,
+          parse_status: file.parse_status,
+          created_at: file.created_at,
+          file_url: `${API_BASE_URL}/uploaded-files/${encodeURIComponent(String(file.id || ''))}`,
+        }))
+      : [];
+    const references = Array.isArray(latestAgentSources)
+      ? latestAgentSources.map((source) => ({
+          file_id: source.file_id || '',
+          ticket_id: source.ticket_id || '',
+          scope: source.scope || 'customer',
+          source_file: source.source_file || '',
+          file_type: source.file_type || '',
+          uploaded_at: source.uploaded_at || '',
+          document_date: source.document_date || '',
+          page: source.page ?? '',
+          index: source.index ?? '',
+          text_excerpt: source.text_excerpt || '',
+          heading_context: source.heading_context || '',
+          file_url: source.file_url || '',
+        }))
+      : [];
     const response = await fetch(`${API_BASE_URL}/tickets/${encodeURIComponent(ticketId)}/close`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        role: 'employee'
+        role: 'employee',
+        customer_email: selectedClient.email || '',
+        category,
+        issue_summary: issueSummary,
+        relevant_context: relevantContext,
+        reasoning,
+        suggested_resolution: suggestedResolution,
+        actions: supportActions,
+        documents,
+        references,
       }),
     });
     const payload = await response.json();
@@ -1131,6 +1219,9 @@ async function submitTicket() {
     document.getElementById('agentStatus').textContent = 'Submitted';
     document.getElementById('agentStatus').style.color = '#3B6D11';
     submitButton.textContent = 'Submitted';
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'support-action-created' }, window.location.origin);
+    }
     activeTab = 'email';
     updateTabs();
     renderActiveTab();

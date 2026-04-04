@@ -40,6 +40,19 @@ select {
   padding: 24px;
 }
 
+.auth-stack {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-brand {
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
 .auth-card {
   width: 100%;
   max-width: 400px;
